@@ -173,9 +173,9 @@ export default function AdminWheelItems() {
   // Yükleniyor kontrolü
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Yükleniyor...</h1>
+          <h1 className="text-2xl font-bold mb-4 text-white">Yükleniyor...</h1>
         </div>
       </div>
     );
@@ -187,283 +187,263 @@ export default function AdminWheelItems() {
   }
   
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold">LuckyChart Admin</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/admin/dashboard"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
-              >
-                Gösterge Paneli
-              </Link>
-              <button
-                onClick={() => router.push('/api/auth/signout')}
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
-              >
-                Çıkış Yap
-              </button>
-            </div>
+    <div className="min-h-screen bg-black text-white">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-yellow-400">Çark Öğeleri</h1>
+          <div className="flex space-x-4">
+            <Link 
+              href="/admin" 
+              className="bg-gray-800 hover:bg-gray-700 text-white py-2 px-4 rounded-md"
+            >
+              Ana Sayfa
+            </Link>
+            <Link 
+              href="/admin/dashboard"
+              className="bg-gray-800 hover:bg-gray-700 text-white py-2 px-4 rounded-md"
+            >
+              Gösterge Paneli
+            </Link>
+            <button
+              onClick={() => router.push('/api/auth/signout')}
+              className="bg-red-800 hover:bg-red-700 text-white py-2 px-4 rounded-md"
+            >
+              Çıkış Yap
+            </button>
           </div>
         </div>
-      </nav>
-
-      <div className="py-10">
-        <header>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold text-gray-900">Çark Öğeleri</h1>
-              <button
-                onClick={() => { resetForm(); setShowForm(!showForm); }}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              >
-                {showForm ? 'İptal' : 'Yeni Öğe Ekle'}
-              </button>
-            </div>
-          </div>
-        </header>
         
-        <main>
-          <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            {error && (
-              <div className="mt-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
-                <span className="block sm:inline">{error}</span>
-              </div>
-            )}
-            
-            {/* Form */}
-            {showForm && (
-              <div className="mt-6 bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
-                <div className="md:grid md:grid-cols-3 md:gap-6">
-                  <div className="md:col-span-1">
-                    <h3 className="text-lg font-medium leading-6 text-gray-900">
-                      {editingId ? 'Çark Öğesini Düzenle' : 'Yeni Çark Öğesi'}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Çarkta görünecek öğenin detaylarını düzenleyin.
-                    </p>
-                  </div>
-                  <div className="mt-5 md:mt-0 md:col-span-2">
-                    <form onSubmit={handleSubmit}>
-                      <div className="grid grid-cols-6 gap-6">
-                        <div className="col-span-6 sm:col-span-3">
-                          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                            Başlık
-                          </label>
-                          <input
-                            type="text"
-                            name="title"
-                            id="title"
-                            value={formData.title}
-                            onChange={handleInputChange}
-                            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="col-span-6 sm:col-span-3">
-                          <label htmlFor="color" className="block text-sm font-medium text-gray-700">
-                            Renk
-                          </label>
-                          <input
-                            type="color"
-                            name="color"
-                            id="color"
-                            value={formData.color}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full p-1 h-10"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="col-span-6">
-                          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                            Açıklama
-                          </label>
-                          <textarea
-                            name="description"
-                            id="description"
-                            value={formData.description}
-                            onChange={handleInputChange}
-                            rows={3}
-                            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                          />
-                        </div>
-                        
-                        <div className="col-span-6 sm:col-span-3">
-                          <label htmlFor="probability" className="block text-sm font-medium text-gray-700">
-                            Olasılık (0.1 - 10.0)
-                          </label>
-                          <input
-                            type="number"
-                            name="probability"
-                            id="probability"
-                            min="0.1"
-                            max="10"
-                            step="0.1"
-                            value={formData.probability}
-                            onChange={handleInputChange}
-                            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                            required
-                          />
-                          <p className="mt-1 text-xs text-gray-500">
-                            Daha yüksek değerler, bu öğenin çarkta daha sık çıkmasını sağlar.
-                          </p>
-                        </div>
-                        
-                        <div className="col-span-6 sm:col-span-3">
-                          <div className="flex items-center h-full mt-6">
-                            <input
-                              type="checkbox"
-                              name="isActive"
-                              id="isActive"
-                              checked={formData.isActive}
-                              onChange={handleInputChange}
-                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                            />
-                            <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900">
-                              Aktif
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-6 flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => { resetForm(); setShowForm(false); }}
-                          className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                          İptal
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={submitting}
-                          className={`ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                            submitting ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
-                        >
-                          {submitting ? 'Kaydediliyor...' : (editingId ? 'Güncelle' : 'Kaydet')}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
+        <div className="flex justify-end mb-6">
+          <button
+            onClick={() => { resetForm(); setShowForm(!showForm); }}
+            className={`px-4 py-2 rounded-md ${
+              showForm 
+                ? 'bg-red-600 hover:bg-red-700' 
+                : 'bg-yellow-500 hover:bg-yellow-600 text-black'
+            }`}
+          >
+            {showForm ? 'İptal' : 'Yeni Öğe Ekle'}
+          </button>
+        </div>
+        
+        {error && (
+          <div className="mb-6 bg-red-900 border border-red-700 text-white px-4 py-3 rounded-lg" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+        
+        {/* Form */}
+        {showForm && (
+          <div className="mb-8 bg-gray-900 shadow-lg border border-gray-800 px-4 py-5 rounded-lg">
+            <div className="md:grid md:grid-cols-3 md:gap-6">
+              <div className="md:col-span-1">
+                <h3 className="text-lg font-medium leading-6 text-yellow-400">
+                  {editingId ? 'Çark Öğesini Düzenle' : 'Yeni Çark Öğesi'}
+                </h3>
+                <p className="mt-1 text-sm text-gray-400">
+                  Çarkta görünecek öğenin detaylarını düzenleyin.
+                </p>
+                <div className="mt-4">
+                  <div 
+                    className="w-20 h-20 rounded-full" 
+                    style={{ backgroundColor: formData.color }}
+                  ></div>
                 </div>
               </div>
-            )}
-            
-            {/* Çark Öğeleri Listesi */}
-            <div className="mt-8 flex flex-col">
-              <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                  <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Önizleme
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Başlık
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Açıklama
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Olasılık
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Durum
-                          </th>
-                          <th scope="col" className="relative px-6 py-3">
-                            <span className="sr-only">Düzenle</span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {wheelItems.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                              Henüz çark öğesi eklenmemiş.
-                            </td>
-                          </tr>
-                        ) : (
-                          wheelItems.map((item) => (
-                            <tr key={item.id}>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div
-                                  className="w-10 h-10 rounded-full"
-                                  style={{ backgroundColor: item.color }}
-                                />
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">{item.title}</div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="text-sm text-gray-500 truncate max-w-xs">
-                                  {item.description || '-'}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">{item.probability.toFixed(1)}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span
-                                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    item.isActive
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-red-100 text-red-800'
-                                  }`}
-                                >
-                                  {item.isActive ? 'Aktif' : 'Pasif'}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button
-                                  onClick={() => handleEdit(item)}
-                                  className="text-indigo-600 hover:text-indigo-900 mr-4"
-                                >
-                                  Düzenle
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(item.id)}
-                                  className="text-red-600 hover:text-red-900"
-                                >
-                                  Sil
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+              
+              <div className="mt-5 md:mt-0 md:col-span-2">
+                <form onSubmit={handleSubmit}>
+                  <div className="grid grid-cols-6 gap-6">
+                    <div className="col-span-6 sm:col-span-3">
+                      <label htmlFor="title" className="block text-sm font-medium text-gray-300">
+                        Başlık
+                      </label>
+                      <input
+                        type="text"
+                        name="title"
+                        id="title"
+                        required
+                        value={formData.title}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-700 bg-gray-800 text-white rounded-md shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
+                      />
+                    </div>
+                    
+                    <div className="col-span-6 sm:col-span-3">
+                      <label htmlFor="color" className="block text-sm font-medium text-gray-300">
+                        Renk
+                      </label>
+                      <input
+                        type="color"
+                        name="color"
+                        id="color"
+                        required
+                        value={formData.color}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-700 bg-gray-800 rounded-md shadow-sm h-10 focus:ring-yellow-500 focus:border-yellow-500"
+                      />
+                    </div>
+                    
+                    <div className="col-span-6">
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-300">
+                        Açıklama
+                      </label>
+                      <textarea
+                        name="description"
+                        id="description"
+                        rows={3}
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-700 bg-gray-800 text-white rounded-md shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
+                      />
+                    </div>
+                    
+                    <div className="col-span-6 sm:col-span-3">
+                      <label htmlFor="probability" className="block text-sm font-medium text-gray-300">
+                        Olasılık Değeri (0.1 - 2.0)
+                      </label>
+                      <input
+                        type="number"
+                        name="probability"
+                        id="probability"
+                        min="0.1"
+                        max="2.0"
+                        step="0.1"
+                        required
+                        value={formData.probability}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-700 bg-gray-800 text-white rounded-md shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
+                      />
+                    </div>
+                    
+                    <div className="col-span-6 sm:col-span-3">
+                      <label htmlFor="isActive" className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="isActive"
+                          id="isActive"
+                          checked={formData.isActive}
+                          onChange={handleInputChange}
+                          className="h-4 w-4 text-yellow-500 focus:ring-yellow-500 border-gray-400 rounded"
+                        />
+                        <span className="ml-2 text-sm text-gray-300">Aktif</span>
+                      </label>
+                      <p className="mt-1 text-xs text-gray-400">
+                        İşaretlenirse, bu öğe çarkta gösterilir.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                  
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => { resetForm(); setShowForm(false); }}
+                      className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"
+                    >
+                      İptal
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className={`px-4 py-2 bg-yellow-500 text-black rounded-md hover:bg-yellow-600 ${
+                        submitting ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      {submitting ? 'Kaydediliyor...' : (editingId ? 'Güncelle' : 'Ekle')}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
-        </main>
+        )}
+        
+        {/* Çark Öğeleri Listesi */}
+        <div className="bg-gray-900 shadow border border-gray-800 overflow-hidden rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-800">
+            <h2 className="text-xl font-bold">Mevcut Çark Öğeleri</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-800">
+              <thead className="bg-gray-800">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Renk
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Başlık
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Açıklama
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Olasılık
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Durum
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    İşlemler
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-gray-900 divide-y divide-gray-800">
+                {wheelItems.length > 0 ? (
+                  wheelItems.map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div 
+                            className="w-10 h-10 rounded-full" 
+                            style={{ backgroundColor: item.color }}
+                          ></div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-white">{item.title}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-300">{item.description || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-300">{item.probability}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          item.isActive 
+                            ? 'bg-green-900 text-green-200' 
+                            : 'bg-red-900 text-red-200'
+                        }`}>
+                          {item.isActive ? 'Aktif' : 'Pasif'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="text-yellow-500 hover:text-yellow-400 mr-3"
+                        >
+                          Düzenle
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="text-red-500 hover:text-red-400"
+                        >
+                          Sil
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-400">
+                      Henüz çark öğesi bulunmuyor.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );

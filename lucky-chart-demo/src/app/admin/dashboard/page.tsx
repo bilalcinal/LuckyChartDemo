@@ -5,15 +5,36 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// Gerçek veri türleri
+type DashboardStats = {
+  totalUsers: number;
+  totalSpins: number;
+  activeWheelItems: number;
+  todayUsers: number;
+  todaySpins: number;
+  latestRewards: {
+    id: string;
+    code: string;
+    itemTitle: string;
+    userPhone: string;
+    createdAt: string;
+    isUsed: boolean;
+  }[];
+};
+
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalSpins: 0,
     activeWheelItems: 0,
     todayUsers: 0,
+    todaySpins: 0,
+    latestRewards: []
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   // Oturum kontrolü
   useEffect(() => {
@@ -22,23 +43,50 @@ export default function AdminDashboard() {
     }
   }, [status, router]);
 
-  // Basit istatistikleri getir (gerçek uygulamada API'dan gelecek)
+  // Gerçek istatistikleri getir
   useEffect(() => {
-    // Mock veriler (gerçek uygulamada API çağrısıyla değiştirilecek)
-    setStats({
-      totalUsers: 256,
-      totalSpins: 487,
-      activeWheelItems: 8,
-      todayUsers: 34,
+    const fetchStats = async () => {
+      if (status !== 'authenticated') return;
+      
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/admin/stats');
+        
+        if (!response.ok) {
+          throw new Error('İstatistikler alınamadı');
+        }
+        
+        const data = await response.json();
+        setStats(data);
+      } catch (error) {
+        console.error('Veri getirme hatası:', error);
+        setError('Veriler yüklenirken bir hata oluştu');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchStats();
+  }, [status]);
+
+  // Tarih formatlama yardımcı fonksiyonu
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
-  }, []);
+  };
 
   // Yükleniyor kontrolü
-  if (status === 'loading') {
+  if (status === 'loading' || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Yükleniyor...</h1>
+          <h1 className="text-2xl font-bold mb-4 text-white">Yükleniyor...</h1>
         </div>
       </div>
     );
@@ -50,134 +98,138 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold">LuckyChart Admin</span>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <button
-                onClick={() => router.push('/api/auth/signout')}
-                className="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
-              >
-                Çıkış Yap
-              </button>
-            </div>
+    <div className="min-h-screen bg-black text-white">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-yellow-400">Gösterge Paneli</h1>
+          <div>
+            <Link 
+              href="/admin" 
+              className="bg-gray-800 hover:bg-gray-700 text-white py-2 px-4 rounded-md mr-2"
+            >
+              Ana Sayfa
+            </Link>
+            <button
+              onClick={() => router.push('/api/auth/signout')}
+              className="bg-red-800 hover:bg-red-700 text-white py-2 px-4 rounded-md"
+            >
+              Çıkış Yap
+            </button>
           </div>
         </div>
-      </nav>
-
-      <div className="py-10">
-        <header>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 className="text-3xl font-bold text-gray-900">Gösterge Paneli</h1>
+        
+        {error && (
+          <div className="bg-red-900 border border-red-700 text-white p-4 rounded-lg mb-6">
+            {error}
           </div>
-        </header>
-        <main>
-          <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            {/* İstatistik Kartları */}
-            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Toplam Kullanıcı</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-gray-900">{stats.totalUsers}</dd>
-                  </dl>
-                </div>
-              </div>
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Toplam Çevirme</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-gray-900">{stats.totalSpins}</dd>
-                  </dl>
-                </div>
-              </div>
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Aktif Çark Öğeleri</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-gray-900">{stats.activeWheelItems}</dd>
-                  </dl>
-                </div>
-              </div>
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Bugünkü Kullanıcılar</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-gray-900">{stats.todayUsers}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-
-            {/* Yönetim Bağlantıları */}
-            <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-md">
-              <ul className="divide-y divide-gray-200">
-                <li>
-                  <Link href="/admin/wheel-items" className="block hover:bg-gray-50">
-                    <div className="px-4 py-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <p className="text-md font-medium text-indigo-600 truncate">Çark Öğelerini Yönet</p>
-                        <div className="ml-2 flex-shrink-0 flex">
-                          <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            Ekle, Düzenle, Sil
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/admin/users" className="block hover:bg-gray-50">
-                    <div className="px-4 py-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <p className="text-md font-medium text-indigo-600 truncate">Kullanıcıları Yönet</p>
-                        <div className="ml-2 flex-shrink-0 flex">
-                          <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            Listele, Düzenle
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/admin/sms-schedule" className="block hover:bg-gray-50">
-                    <div className="px-4 py-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <p className="text-md font-medium text-indigo-600 truncate">SMS Zamanlamalarını Yönet</p>
-                        <div className="ml-2 flex-shrink-0 flex">
-                          <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            Ekle, Düzenle, Sil
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/admin/rewards" className="block hover:bg-gray-50">
-                    <div className="px-4 py-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <p className="text-md font-medium text-indigo-600 truncate">Ödülleri Yönet</p>
-                        <div className="ml-2 flex-shrink-0 flex">
-                          <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            Görüntüle, Doğrula
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              </ul>
-            </div>
+        )}
+        
+        {/* İstatistik Kartları */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
+            <h2 className="text-lg font-medium text-gray-300 mb-2">Toplam Kullanıcı</h2>
+            <p className="text-4xl font-bold text-yellow-400">{stats.totalUsers}</p>
           </div>
-        </main>
+          
+          <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
+            <h2 className="text-lg font-medium text-gray-300 mb-2">Toplam Çevirme</h2>
+            <p className="text-4xl font-bold text-yellow-400">{stats.totalSpins}</p>
+          </div>
+          
+          <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
+            <h2 className="text-lg font-medium text-gray-300 mb-2">Aktif Çark Öğeleri</h2>
+            <p className="text-4xl font-bold text-yellow-400">{stats.activeWheelItems}</p>
+          </div>
+          
+          <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
+            <h2 className="text-lg font-medium text-gray-300 mb-2">Bugünkü Kullanıcılar</h2>
+            <p className="text-4xl font-bold text-yellow-400">{stats.todayUsers}</p>
+          </div>
+        </div>
+        
+        {/* Son Ödüller */}
+        <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden mb-8">
+          <div className="px-6 py-4 border-b border-gray-800">
+            <h2 className="text-xl font-bold">Son Kazanılan Ödüller</h2>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-800">
+              <thead className="bg-gray-800">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Kod
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Ödül
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Kullanıcı
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Tarih
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Durum
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-gray-900 divide-y divide-gray-800">
+                {stats.latestRewards.length > 0 ? (
+                  stats.latestRewards.map((reward) => (
+                    <tr key={reward.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-400">
+                        {reward.code}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {reward.itemTitle}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {reward.userPhone}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {formatDate(reward.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          reward.isUsed 
+                            ? 'bg-green-900 text-green-200' 
+                            : 'bg-yellow-900 text-yellow-200'
+                        }`}>
+                          {reward.isUsed ? 'Kullanıldı' : 'Bekliyor'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-400">
+                      Henüz kazanılan ödül bulunmuyor.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        {/* Hızlı Erişim Bağlantıları */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Link href="/admin/wheel-items" className="bg-gray-900 hover:bg-gray-800 p-6 rounded-lg border border-gray-800 transition-colors">
+            <h2 className="text-xl font-bold mb-2">Çark Öğeleri</h2>
+            <p className="text-gray-400">Çark üzerindeki ödülleri ve özellikleri yönetin.</p>
+          </Link>
+          
+          <Link href="/admin/users" className="bg-gray-900 hover:bg-gray-800 p-6 rounded-lg border border-gray-800 transition-colors">
+            <h2 className="text-xl font-bold mb-2">Kullanıcılar</h2>
+            <p className="text-gray-400">Sisteme kayıtlı kullanıcıları görüntüleyin.</p>
+          </Link>
+          
+          <Link href="/admin/rewards" className="bg-gray-900 hover:bg-gray-800 p-6 rounded-lg border border-gray-800 transition-colors">
+            <h2 className="text-xl font-bold mb-2">Ödüller</h2>
+            <p className="text-gray-400">Kullanıcılara verilen ödülleri görüntüleyin.</p>
+          </Link>
+        </div>
       </div>
     </div>
   );
