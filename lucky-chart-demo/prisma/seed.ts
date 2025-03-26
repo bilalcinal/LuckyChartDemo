@@ -104,20 +104,20 @@ async function main() {
       data: [
         {
           id: uuidv4(),
-          hour: 10,
-          minute: 0,
+          message: 'Bugün şansınızı denemek için çark çevirmeyi unutmayın! Kafeye uğrayın ve size özel indirimler kazanın.',
+          scheduleTime: new Date(new Date().setHours(10, 0, 0, 0)),
           isActive: true,
         },
         {
           id: uuidv4(),
-          hour: 15,
-          minute: 30,
+          message: 'Öğleden sonra kahve molası zamanı! Şanslı çarkı çevir, belki bedava kahve kazanırsın!',
+          scheduleTime: new Date(new Date().setHours(15, 30, 0, 0)),
           isActive: true,
         },
         {
           id: uuidv4(),
-          hour: 19,
-          minute: 0,
+          message: 'Akşam yemeği öncesi bir şeyler kazanmak ister misin? Şanslı çarkı çevir ve ödülünü al!',
+          scheduleTime: new Date(new Date().setHours(19, 0, 0, 0)),
           isActive: true,
         },
       ],
