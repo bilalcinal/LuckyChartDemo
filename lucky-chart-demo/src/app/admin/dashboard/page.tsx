@@ -40,13 +40,19 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/admin/login');
+    } else if (status === 'authenticated') {
+      // Sadece ADMIN rolüne sahip kullanıcılar erişebilir
+      if (session?.user?.role !== 'ADMIN') {
+        router.push('/admin/login');
+        return;
+      }
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   // Gerçek istatistikleri getir
   useEffect(() => {
     const fetchStats = async () => {
-      if (status !== 'authenticated') return;
+      if (status !== 'authenticated' || session?.user?.role !== 'ADMIN') return;
       
       try {
         setIsLoading(true);
@@ -67,7 +73,7 @@ export default function AdminDashboard() {
     };
     
     fetchStats();
-  }, [status]);
+  }, [status, session]);
 
   // Tarih formatlama yardımcı fonksiyonu
   const formatDate = (dateString: string) => {
@@ -102,15 +108,15 @@ export default function AdminDashboard() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-yellow-400">Gösterge Paneli</h1>
-          <div>
+          <div className="flex space-x-4">
             <Link 
               href="/admin" 
-              className="bg-gray-800 hover:bg-gray-700 text-white py-2 px-4 rounded-md mr-2"
+              className="bg-gray-800 hover:bg-gray-700 text-white py-2 px-4 rounded-md"
             >
               Ana Sayfa
             </Link>
             <button
-              onClick={() => router.push('/api/auth/signout')}
+              onClick={() => router.push('/api/auth/signout?callbackUrl=/admin/login')}
               className="bg-red-800 hover:bg-red-700 text-white py-2 px-4 rounded-md"
             >
               Çıkış Yap
@@ -214,20 +220,25 @@ export default function AdminDashboard() {
         </div>
         
         {/* Hızlı Erişim Bağlantıları */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Link href="/admin/wheel-items" className="bg-gray-900 hover:bg-gray-800 p-6 rounded-lg border border-gray-800 transition-colors">
-            <h2 className="text-xl font-bold mb-2">Çark Öğeleri</h2>
-            <p className="text-gray-400">Çark üzerindeki ödülleri ve özellikleri yönetin.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Link 
+            href="/admin/wheel-items" 
+            className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:bg-gray-800 transition-colors duration-200"
+          >
+            <div className="flex flex-col items-center text-center">
+              <span className="text-3xl mb-4">🎡</span>
+              <h2 className="text-xl font-semibold text-yellow-400">Çark Öğeleri</h2>
+            </div>
           </Link>
           
-          <Link href="/admin/users" className="bg-gray-900 hover:bg-gray-800 p-6 rounded-lg border border-gray-800 transition-colors">
-            <h2 className="text-xl font-bold mb-2">Kullanıcılar</h2>
-            <p className="text-gray-400">Sisteme kayıtlı kullanıcıları görüntüleyin.</p>
-          </Link>
-          
-          <Link href="/admin/rewards" className="bg-gray-900 hover:bg-gray-800 p-6 rounded-lg border border-gray-800 transition-colors">
-            <h2 className="text-xl font-bold mb-2">Ödüller</h2>
-            <p className="text-gray-400">Kullanıcılara verilen ödülleri görüntüleyin.</p>
+          <Link 
+            href="/admin/rewards" 
+            className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:bg-gray-800 transition-colors duration-200"
+          >
+            <div className="flex flex-col items-center text-center">
+              <span className="text-3xl mb-4">🎁</span>
+              <h2 className="text-xl font-semibold text-yellow-400">Ödüller</h2>
+            </div>
           </Link>
         </div>
       </div>
