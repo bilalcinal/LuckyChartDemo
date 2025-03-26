@@ -221,8 +221,16 @@ export default function WheelPage() {
               radiusLineColor="#fcd34d"
               radiusLineWidth={2}
               fontSize={wheelItems.length > 6 ? 14 : 16}
-              perpendicularText={true}
+              perpendicularText={false}
               textDistance={60}
+              pointerProps={{
+                style: {
+                  left: '88%', // Sağda kalacak şekilde ayarladık
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 5,
+                }
+              }}
             />
             <button
               onClick={handleSpinClick}
