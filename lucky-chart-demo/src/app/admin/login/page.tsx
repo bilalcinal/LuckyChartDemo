@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -10,6 +10,14 @@ export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { status, data: session } = useSession();
+  
+  // Kullanıcı zaten giriş yapmışsa ve admin rolü varsa yönlendir
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
+      router.push('/admin');
+    }
+  }, [status, session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,9 +25,8 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      // Admin kimlik doğrulaması için NextAuth kullanılacak
-      // Not: Bu basit bir örnek, gerçek uygulamalarda admin auth daha kompleks olmalı
-      const result = await signIn('credentials', {
+      // Admin kimlik doğrulaması için admin-credentials sağlayıcısını kullan
+      const result = await signIn('admin-credentials', {
         username,
         password,
         redirect: false,
@@ -32,7 +39,7 @@ export default function AdminLogin() {
       }
 
       // Başarılı giriş, admin paneline yönlendir
-      router.push('/admin/dashboard');
+      router.push('/admin');
     } catch (error) {
       console.error('Admin giriş hatası:', error);
       setError('Bir sorun oluştu. Lütfen tekrar deneyin.');
@@ -40,6 +47,17 @@ export default function AdminLogin() {
       setIsLoading(false);
     }
   };
+
+  // Yükleniyor
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4 text-white">Yükleniyor...</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">

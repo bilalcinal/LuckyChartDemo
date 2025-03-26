@@ -15,24 +15,32 @@ type Reward = {
 };
 
 export default function AdminRewards() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // Oturum kontrolü
+  // Session kontrolü
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/admin/login');
+    } else if (status === 'authenticated') {
+      // Sadece ADMIN rolüne sahip kullanıcılar erişebilir
+      if (session.user.role !== 'ADMIN') {
+        router.push('/admin/login');
+        return;
+      }
     }
-  }, [status, router]);
+  }, [status, session, router]);
   
   // Ödülleri getir
   useEffect(() => {
     const fetchRewards = async () => {
       try {
         setLoading(true);
+        setError('');
+        
         const response = await fetch('/api/admin/rewards');
         
         if (!response.ok) {
@@ -40,43 +48,45 @@ export default function AdminRewards() {
         }
         
         const data = await response.json();
-        setRewards(data.rewards || []);
+        setRewards(data);
       } catch (error) {
-        console.error('Ödüller getirme hatası:', error);
+        console.error('Ödülleri getirme hatası:', error);
         setError('Ödüller yüklenirken bir hata oluştu');
       } finally {
         setLoading(false);
       }
     };
     
-    if (status === 'authenticated') {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
       fetchRewards();
     }
-  }, [status]);
+  }, [status, session]);
   
-  // Ödülün kullanıldı olarak işaretlenmesi
-  const handleMarkAsUsed = async (id: string) => {
+  // Ödülü kullanıldı olarak işaretle
+  const markRewardAsUsed = async (rewardId: string, isUsed: boolean) => {
     try {
-      const response = await fetch(`/api/admin/rewards/${id}`, {
+      const response = await fetch(`/api/admin/rewards/${rewardId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ isUsed: true }),
+        body: JSON.stringify({ isUsed }),
       });
       
       if (!response.ok) {
         throw new Error('Ödül güncellenemedi');
       }
       
-      // UI'da güncelle
+      // UI'da güncellenemiyorsa, bu kodu kullanın
       setRewards(prev => 
         prev.map(reward => 
-          reward.id === id ? { ...reward, isUsed: true } : reward
+          reward.id === rewardId 
+            ? { ...reward, isUsed } 
+            : reward
         )
       );
     } catch (error) {
-      console.error('Ödül güncelleme hatası:', error);
+      console.error('Ödül işaretleme hatası:', error);
       setError('Ödül güncellenirken bir hata oluştu');
     }
   };
@@ -93,7 +103,7 @@ export default function AdminRewards() {
     });
   };
   
-  // Yükleniyor kontrolü
+  // Yükleniyor
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -128,7 +138,7 @@ export default function AdminRewards() {
               Gösterge Paneli
             </Link>
             <button
-              onClick={() => router.push('/api/auth/signout')}
+              onClick={() => router.push('/api/auth/signout?callbackUrl=/admin/login')}
               className="bg-red-800 hover:bg-red-700 text-white py-2 px-4 rounded-md"
             >
               Çıkış Yap
@@ -142,10 +152,9 @@ export default function AdminRewards() {
           </div>
         )}
         
-        {/* Ödüller Listesi */}
         <div className="bg-gray-900 shadow border border-gray-800 overflow-hidden rounded-lg">
           <div className="px-6 py-4 border-b border-gray-800">
-            <h2 className="text-xl font-bold">Kullanıcı Ödülleri</h2>
+            <h2 className="text-xl font-bold">Ödül Listesi</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-800">
@@ -161,13 +170,13 @@ export default function AdminRewards() {
                     Kullanıcı
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Oluşturma Tarihi
+                    Tarih
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Durum
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    İşlemler
+                    İşlem
                   </th>
                 </tr>
               </thead>
@@ -193,16 +202,23 @@ export default function AdminRewards() {
                             ? 'bg-green-900 text-green-200' 
                             : 'bg-yellow-900 text-yellow-200'
                         }`}>
-                          {reward.isUsed ? 'Kullanıldı' : 'Bekliyor'}
+                          {reward.isUsed ? 'Kullanıldı' : 'Kullanılmadı'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        {!reward.isUsed && (
+                        {!reward.isUsed ? (
                           <button
-                            onClick={() => handleMarkAsUsed(reward.id)}
+                            onClick={() => markRewardAsUsed(reward.id, true)}
+                            className="text-green-500 hover:text-green-400"
+                          >
+                            Kullanıldı İşaretle
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => markRewardAsUsed(reward.id, false)}
                             className="text-yellow-500 hover:text-yellow-400"
                           >
-                            Kullanıldı Olarak İşaretle
+                            Kullanılmadı İşaretle
                           </button>
                         )}
                       </td>

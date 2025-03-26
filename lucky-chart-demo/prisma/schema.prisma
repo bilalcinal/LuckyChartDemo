@@ -55,12 +55,12 @@ model Reward {
 
 // SMS gönderim zamanlaması
 model SmsSchedule {
-  id        String   @id @default(uuid())
-  hour      Int
-  minute    Int
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(uuid())
+  message      String
+  scheduleTime DateTime
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 // Admin kullanıcıları

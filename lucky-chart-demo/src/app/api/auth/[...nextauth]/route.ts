@@ -3,12 +3,14 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
 import { AuthOptions, DefaultSession } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
+import bcrypt from 'bcrypt';
 
 // Özel kullanıcı tipimizi tanımlıyoruz
 type LuckyChartUser = {
   id: string;
   phone: string;
   spinsRemaining: number;
+  role?: string;
 };
 
 // NextAuth.js'in varsayılan tiplerine özel alanlar ekliyoruz
@@ -18,12 +20,14 @@ declare module 'next-auth' {
       id: string;
       phone: string;
       spinsRemaining: number;
+      role?: string;
     } & DefaultSession['user'];
   }
   
   interface User {
     phone: string;
     spinsRemaining: number;
+    role?: string;
   }
 }
 
@@ -33,13 +37,16 @@ declare module 'next-auth/jwt' {
     userId: string;
     phone: string;
     spinsRemaining: number;
+    role?: string;
   }
 }
 
 // NextAuth.js yapılandırması
 export const authOptions: AuthOptions = {
   providers: [
+    // Normal kullanıcılar için telefon kimlik doğrulama
     CredentialsProvider({
+      id: 'phone-credentials',
       name: 'Phone',
       credentials: {
         phone: { label: 'Telefon Numarası', type: 'text', placeholder: '5XX XXX XX XX' },
@@ -77,9 +84,44 @@ export const authOptions: AuthOptions = {
           id: user.id,
           phone: user.phone,
           spinsRemaining: user.spinsRemaining,
+          role: 'USER'
         } as LuckyChartUser;
       },
     }),
+    
+    // Admin kullanıcılar için kullanıcı adı-şifre kimlik doğrulama
+    CredentialsProvider({
+      id: 'admin-credentials',
+      name: 'Admin',
+      credentials: {
+        username: { label: 'Kullanıcı Adı', type: 'text' },
+        password: { label: 'Şifre', type: 'password' }
+      },
+      async authorize(credentials) {
+        const { username, password } = credentials ?? {};
+        
+        if (!username || !password) return null;
+        
+        // Admin kullanıcıyı veritabanında ara
+        const admin = await prisma.admin.findUnique({
+          where: { username },
+        });
+        
+        if (!admin) return null;
+        
+        // Şifre kontrolü
+        const isPasswordValid = await bcrypt.compare(password, admin.password);
+        
+        if (!isPasswordValid) return null;
+        
+        return {
+          id: admin.id,
+          phone: 'admin', // Bu alan kullanılmıyor ama tip için gerekli
+          spinsRemaining: 0, // Bu alan kullanılmıyor ama tip için gerekli
+          role: 'ADMIN'
+        } as LuckyChartUser;
+      }
+    })
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -87,6 +129,7 @@ export const authOptions: AuthOptions = {
         token.userId = user.id;
         token.phone = user.phone;
         token.spinsRemaining = user.spinsRemaining;
+        token.role = user.role;
       }
       return token;
     },
@@ -97,17 +140,18 @@ export const authOptions: AuthOptions = {
           id: token.userId,
           phone: token.phone,
           spinsRemaining: token.spinsRemaining,
+          role: token.role
         };
       }
       return session;
     },
   },
   pages: {
-    signIn: '/qr', // QR kodu okutma sayfası
+    signIn: '/qr', // QR kodu okutma sayfası (normal kullanıcılar için)
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 gün
+    maxAge: 5 * 60, // 5 dakika (saniye olarak)
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

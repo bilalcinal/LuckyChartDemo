@@ -14,11 +14,16 @@ export default function AdminPage() {
     if (status === 'unauthenticated') {
       router.push('/admin/login');
     } else if (status === 'authenticated') {
+      // Sadece ADMIN rolüne sahip kullanıcılar erişebilir
+      if (session.user.role !== 'ADMIN') {
+        router.push('/admin/login');
+        return;
+      }
       setLoading(false);
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
-  if (loading) {
+  if (loading || status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
@@ -40,7 +45,7 @@ export default function AdminPage() {
       <div className="container mx-auto">
         <div className="flex justify-end mb-8">
           <button
-            onClick={() => router.push('/api/auth/signout')}
+            onClick={() => router.push('/api/auth/signout?callbackUrl=/admin/login')}
             className="bg-red-800 hover:bg-red-700 text-white py-2 px-4 rounded-md"
           >
             Çıkış Yap

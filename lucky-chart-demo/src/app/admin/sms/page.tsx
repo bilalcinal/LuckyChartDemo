@@ -15,7 +15,7 @@ type SmsSchedule = {
 };
 
 export default function AdminSmsSchedules() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [smsSchedules, setSmsSchedules] = useState<SmsSchedule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,8 +35,14 @@ export default function AdminSmsSchedules() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/admin/login');
+    } else if (status === 'authenticated') {
+      // Sadece ADMIN rolüne sahip kullanıcılar erişebilir
+      if (session.user.role !== 'ADMIN') {
+        router.push('/admin/login');
+        return;
+      }
     }
-  }, [status, router]);
+  }, [status, session, router]);
   
   // SMS zamanlamalarını getir
   useEffect(() => {
@@ -59,10 +65,10 @@ export default function AdminSmsSchedules() {
       }
     };
     
-    if (status === 'authenticated') {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
       fetchSmsSchedules();
     }
-  }, [status]);
+  }, [status, session]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -213,7 +219,7 @@ export default function AdminSmsSchedules() {
               Gösterge Paneli
             </Link>
             <button
-              onClick={() => router.push('/api/auth/signout')}
+              onClick={() => router.push('/api/auth/signout?callbackUrl=/admin/login')}
               className="bg-red-800 hover:bg-red-700 text-white py-2 px-4 rounded-md"
             >
               Çıkış Yap
