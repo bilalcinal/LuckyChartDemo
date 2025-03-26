@@ -1,0 +1,49 @@
+{
+  "name": "lucky-chart-demo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "scheduler": "node server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.5.0",
+    "@tanstack/react-query": "^5.69.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/bull": "^4.10.4",
+    "@types/node-cron": "^3.0.11",
+    "@types/uuid": "^10.0.0",
+    "bcrypt": "^5.1.1",
+    "bull": "^4.16.5",
+    "next": "15.2.4",
+    "next-auth": "^4.24.11",
+    "node-cron": "^3.0.3",
+    "prisma": "^6.5.0",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.0.0",
+    "react-custom-roulette": "^1.4.1",
+    "react-dom": "^19.0.0",
+    "react-webcam": "^7.2.0",
+    "twilio": "^5.5.1",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/node-fetch": "^2.6.12",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.4",
+    "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  }
+}

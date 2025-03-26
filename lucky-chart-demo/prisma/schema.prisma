@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Kullanıcı modeli
+model User {
+  id             String     @id @default(uuid())
+  phone          String     @unique
+  lastLogin      DateTime   @default(now())
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  lastSpinDate   DateTime?
+  spinsRemaining Int        @default(1)
+  isActive       Boolean    @default(true)
+  rewards        Reward[]
+}
+
+// Çark dilimlerini tanımlayan model
+model WheelItem {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  color       String
+  probability Float    @default(1.0) // Çarkta çıkma olasılığı (1.0 = %100)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  rewards     Reward[]
+}
+
+// Kullanıcıya verilen ödüller
+model Reward {
+  id          String    @id @default(uuid())
+  code        String    @unique // 5-6 haneli benzersiz kod
+  userId      String
+  wheelItemId String
+  user        User      @relation(fields: [userId], references: [id])
+  wheelItem   WheelItem @relation(fields: [wheelItemId], references: [id])
+  isUsed      Boolean   @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// SMS gönderim zamanlaması
+model SmsSchedule {
+  id        String   @id @default(uuid())
+  hour      Int
+  minute    Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Admin kullanıcıları
+model Admin {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
