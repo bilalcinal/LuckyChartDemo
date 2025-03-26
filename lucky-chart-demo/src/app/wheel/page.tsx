@@ -35,6 +35,23 @@ export default function WheelPage() {
   const [showReward, setShowReward] = useState(false);
   const [error, setError] = useState('');
   const [existingReward, setExistingReward] = useState<RewardDetails | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Mobil/masaüstü tespiti için
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // İlk yükleme kontrolü
+    checkIfMobile();
+    
+    // Ekran boyutu değiştiğinde kontrol et
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Temizlik
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
   
   // Oturum kontrolü
   useEffect(() => {
@@ -89,6 +106,24 @@ export default function WheelPage() {
       fetchData();
     }
   }, [status]);
+  
+  // Font boyutunu dinamik olarak hesapla
+  const calculateFontSize = (itemCount: number): number => {
+    // Pasta dilimi sayısına ve ekran boyutuna göre font boyutlarını belirle
+    if (itemCount > 15) {
+      return isMobile ? 8 : 9;
+    } else if (itemCount > 12) {
+      return isMobile ? 9 : 10;
+    } else if (itemCount > 10) {
+      return isMobile ? 10 : 11;
+    } else if (itemCount > 8) {
+      return isMobile ? 11 : 12;
+    } else if (itemCount > 6) {
+      return isMobile ? 12 : 13;
+    } else {
+      return isMobile ? 13 : 14;
+    }
+  };
   
   const handleSpinClick = async () => {
     if (spinning || !wheelItems.length) return;
@@ -166,6 +201,9 @@ export default function WheelPage() {
     return null; // useEffect içerisinde yönlendirme yapılacak
   }
   
+  // Dinamik olarak hesaplanan font boyutu
+  const dynamicFontSize = calculateFontSize(wheelItems.length);
+  
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black py-10">
       <div className="text-center mb-4 w-full max-w-3xl px-4">
@@ -206,16 +244,16 @@ export default function WheelPage() {
               mustStartSpinning={mustSpin}
               prizeNumber={prizeNumber}
               data={wheelItems.map(item => {
-                // Metin uzunluğunu dilime göre sınırla
-                let text = item.title;
-                const maxLength = wheelItems.length > 10 ? 8 : wheelItems.length > 7 ? 10 : 12;
-                
-                if (text.length > maxLength) {
-                  text = text.substring(0, maxLength) + '..';
-                }
+                const words = item.title.split(' ');
+                // Çok uzun kelimeleri birden fazla satıra böl
+                const formattedTitle = words.length > 1 
+                  ? words.join('\n') 
+                  : item.title.length > 8 
+                    ? item.title.match(/.{1,8}/g)?.join('\n') || item.title 
+                    : item.title;
                 
                 return {
-                  option: text,
+                  option: formattedTitle,
                   style: { 
                     backgroundColor: item.color, 
                     textColor: '#ffffff',
@@ -232,10 +270,10 @@ export default function WheelPage() {
               outerBorderWidth={15}
               innerBorderColor="#30261a"
               innerBorderWidth={8}
-              innerRadius={20}
+              innerRadius={18}
               radiusLineColor="#fcd34d"
-              radiusLineWidth={3}
-              fontSize={wheelItems.length > 8 ? 11 : wheelItems.length > 6 ? 13 : 15}
+              radiusLineWidth={2}
+              fontSize={dynamicFontSize}
               perpendicularText={false}
               textDistance={55}
               pointerProps={{

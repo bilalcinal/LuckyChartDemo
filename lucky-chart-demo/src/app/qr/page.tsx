@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 
@@ -10,6 +10,8 @@ export default function QRPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/wheel';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +47,7 @@ export default function QRPage() {
       }
 
       // Ardından oturum aç
-      const result = await signIn('credentials', {
+      const result = await signIn('phone-credentials', {
         phone: formattedPhone,
         redirect: false,
       });
@@ -56,8 +58,9 @@ export default function QRPage() {
         return;
       }
 
-      // Başarılı giriş, çark sayfasına yönlendir
-      router.push('/wheel');
+      // Başarılı giriş, callbackUrl veya çark sayfasına yönlendir
+      router.push(callbackUrl);
+      
     } catch (error) {
       console.error('Giriş hatası:', error);
       setError('Bir sorun oluştu. Lütfen tekrar deneyin.');
