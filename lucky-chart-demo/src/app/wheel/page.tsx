@@ -34,6 +34,7 @@ export default function WheelPage() {
   const [reward, setReward] = useState<RewardDetails | null>(null);
   const [showReward, setShowReward] = useState(false);
   const [error, setError] = useState('');
+  const [existingReward, setExistingReward] = useState<RewardDetails | null>(null);
   
   // Oturum kontrolü
   useEffect(() => {
@@ -42,18 +43,19 @@ export default function WheelPage() {
     }
   }, [status, router]);
   
-  // Çark öğelerini getir
+  // Çark öğelerini ve kullanıcının mevcut ödüllerini getir
   useEffect(() => {
-    const fetchWheelItems = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/admin/wheel-items');
-        if (!response.ok) {
+        // Çark öğelerini getir
+        const itemsResponse = await fetch('/api/admin/wheel-items');
+        if (!itemsResponse.ok) {
           throw new Error('Çark öğeleri getirilemedi');
         }
         
-        const data = await response.json();
+        const itemsData = await itemsResponse.json();
         // Sadece aktif öğeleri al
-        const activeItems = data.filter((item: WheelItem & { isActive: boolean }) => item.isActive);
+        const activeItems = itemsData.filter((item: WheelItem & { isActive: boolean }) => item.isActive);
         
         if (!activeItems.length) {
           setError('Aktif çark öğesi bulunamadı');
@@ -61,14 +63,32 @@ export default function WheelPage() {
         }
         
         setWheelItems(activeItems);
+        
+        // Kullanıcının mevcut ödüllerini getir
+        const rewardsResponse = await fetch('/api/wheel/rewards');
+        if (rewardsResponse.ok) {
+          const rewardsData = await rewardsResponse.json();
+          if (rewardsData.rewards && rewardsData.rewards.length > 0) {
+            // Süresi geçmemiş en son ödülü al
+            const latestReward = rewardsData.rewards.find((r: RewardDetails) => 
+              new Date(r.expiresAt) > new Date()
+            );
+            
+            if (latestReward) {
+              setExistingReward(latestReward);
+            }
+          }
+        }
       } catch (error) {
-        console.error('Çark öğeleri getirme hatası:', error);
-        setError('Çark öğeleri yüklenirken bir hata oluştu');
+        console.error('Veri getirme hatası:', error);
+        setError('Veriler yüklenirken bir hata oluştu');
       }
     };
     
-    fetchWheelItems();
-  }, []);
+    if (status === 'authenticated') {
+      fetchData();
+    }
+  }, [status]);
   
   const handleSpinClick = async () => {
     if (spinning || !wheelItems.length) return;
@@ -101,7 +121,20 @@ export default function WheelPage() {
       
     } catch (error: any) {
       console.error('Çark çevirme hatası:', error);
-      setError(error.message || 'Çark çevirme sırasında bir hata oluştu');
+      
+      // Kullanıcının günlük hakkı bitti mesajını kontrol et
+      if (error.message.includes('Bugün için çevirme hakkınız')) {
+        setError('Bugünlük hakkınız bitti, lütfen yarın tekrar deneyiniz.');
+        
+        // Mevcut ödülü göster (varsa)
+        if (existingReward) {
+          setReward(existingReward);
+          setShowReward(true);
+        }
+      } else {
+        setError(error.message || 'Çark çevirme sırasında bir hata oluştu');
+      }
+      
       setSpinning(false);
     }
   };
@@ -114,15 +147,14 @@ export default function WheelPage() {
   
   const closeRewardModal = () => {
     setShowReward(false);
-    setReward(null);
   };
   
   // Oturum yükleniyor veya çark öğeleri henüz yüklenmediyse
   if (status === 'loading' || !wheelItems.length) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Yükleniyor...</h1>
+          <h1 className="text-2xl font-bold mb-4 text-white">Yükleniyor...</h1>
           {error && <p className="text-red-500 mt-4">{error}</p>}
         </div>
       </div>
@@ -135,17 +167,36 @@ export default function WheelPage() {
   }
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 py-10">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black py-10">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold">Şanslı Çark</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className="text-4xl font-bold text-yellow-400">Şanslı Çark</h1>
+        <p className="text-gray-300 mt-2">
           Hoş geldin, {session?.user?.phone}!
           Çarkı çevirerek şansını dene.
         </p>
-        {error && <p className="text-red-500 mt-4">{error}</p>}
+        {error && (
+          <div className="mt-4 bg-red-900 text-white p-3 rounded-lg border border-red-700">
+            {error}
+            {existingReward && (
+              <div className="mt-2 text-sm">
+                Mevcut kodunuz: <span className="font-bold text-yellow-300">{existingReward.code}</span>
+                <br />
+                <span className="text-xs text-gray-300">
+                  {new Date(existingReward.expiresAt).toLocaleDateString('tr-TR', { 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })} tarihine kadar geçerlidir.
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
-      <div className="relative mb-8">
+      <div className="relative mb-8" style={{ width: '350px', height: '350px' }}>
         <Wheel
           mustStartSpinning={mustSpin}
           prizeNumber={prizeNumber}
@@ -155,23 +206,23 @@ export default function WheelPage() {
           }))}
           onStopSpinning={handleSpinStop}
           spinDuration={0.5}
-          backgroundColors={['#ff8f43', '#70bbe0', '#0b3351', '#f9dd50']}
+          backgroundColors={['#3f2a70', '#422372', '#4a1a74', '#531777', '#5c1379']}
           textColors={['#ffffff']}
-          outerBorderColor="#eeeeee"
+          outerBorderColor="#fcd34d"
           outerBorderWidth={10}
           innerBorderColor="#30261a"
-          innerBorderWidth={0}
-          innerRadius={0}
-          radiusLineColor="#eeeeee"
-          radiusLineWidth={1}
-          fontSize={17}
+          innerBorderWidth={5}
+          innerRadius={20}
+          radiusLineColor="#fcd34d"
+          radiusLineWidth={2}
+          fontSize={20}
           perpendicularText={true}
-          textDistance={60}
+          textDistance={70}
         />
         <button
           onClick={handleSpinClick}
           disabled={spinning || mustSpin}
-          className={`absolute inset-0 m-auto w-16 h-16 rounded-full bg-red-600 text-white font-bold
+          className={`absolute inset-0 m-auto w-20 h-20 rounded-full bg-yellow-500 text-black font-bold
             flex items-center justify-center transform hover:scale-110 transition-transform 
             focus:outline-none ${spinning || mustSpin ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
@@ -180,33 +231,33 @@ export default function WheelPage() {
       </div>
       
       <div className="text-center">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-400">
           Her gün yeni çevirme hakkı kazanırsınız.
         </p>
       </div>
       
       {/* Ödül Modalı */}
       {showReward && reward && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-center mb-4">Tebrikler!</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-lg p-8 max-w-md w-full mx-4 border border-yellow-500 text-white">
+            <h2 className="text-2xl font-bold text-center mb-4 text-yellow-400">Tebrikler!</h2>
             <div className="text-center mb-6">
               <div 
-                className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl"
+                className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-4xl"
                 style={{ backgroundColor: reward.item.color }}
               >
                 🎁
               </div>
-              <h3 className="text-xl font-bold">{reward.item.title}</h3>
+              <h3 className="text-xl font-bold text-white">{reward.item.title}</h3>
               {reward.item.description && (
-                <p className="text-gray-600 mt-2">{reward.item.description}</p>
+                <p className="text-gray-300 mt-2">{reward.item.description}</p>
               )}
             </div>
             
-            <div className="bg-gray-100 p-4 rounded-lg text-center mb-6">
-              <p className="text-sm text-gray-600 mb-2">Promosyon Kodunuz:</p>
-              <p className="text-2xl font-mono font-bold tracking-wider">{reward.code}</p>
-              <p className="text-xs text-gray-500 mt-2">
+            <div className="bg-gray-800 p-4 rounded-lg text-center mb-6 border border-gray-700">
+              <p className="text-sm text-gray-300 mb-2">Promosyon Kodunuz:</p>
+              <p className="text-3xl font-mono font-bold tracking-wider text-yellow-400">{reward.code}</p>
+              <p className="text-xs text-gray-400 mt-2">
                 Bu kod 
                 {new Date(reward.expiresAt).toLocaleDateString('tr-TR', { 
                   day: 'numeric', 
@@ -222,7 +273,7 @@ export default function WheelPage() {
             <div className="text-center">
               <button
                 onClick={closeRewardModal}
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
+                className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
               >
                 Kapat
               </button>
