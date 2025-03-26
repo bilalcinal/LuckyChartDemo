@@ -168,7 +168,7 @@ export default function WheelPage() {
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black py-10">
-      <div className="text-center mb-8 w-full max-w-xl px-4">
+      <div className="text-center mb-4 w-full max-w-3xl px-4">
         <h1 className="text-4xl font-bold text-yellow-400">Şanslı Çark</h1>
         <p className="text-gray-300 mt-2">
           Hoş geldin, {session?.user?.phone}!
@@ -196,7 +196,7 @@ export default function WheelPage() {
         )}
       </div>
       
-      <div className="w-full max-w-md px-4 mx-auto mb-8">
+      <div className="w-full max-w-3xl px-4 mx-auto mb-6">
         <div className="relative" style={{ 
           width: '100%', 
           paddingBottom: '100%', /* 1:1 aspect ratio */
@@ -205,29 +205,47 @@ export default function WheelPage() {
             <Wheel
               mustStartSpinning={mustSpin}
               prizeNumber={prizeNumber}
-              data={wheelItems.map(item => ({
-                option: item.title,
-                style: { backgroundColor: item.color, textColor: '#ffffff' }
-              }))}
+              data={wheelItems.map(item => {
+                // Metin uzunluğunu dilime göre sınırla
+                let text = item.title;
+                const maxLength = wheelItems.length > 10 ? 8 : wheelItems.length > 7 ? 10 : 12;
+                
+                if (text.length > maxLength) {
+                  text = text.substring(0, maxLength) + '..';
+                }
+                
+                return {
+                  option: text,
+                  style: { 
+                    backgroundColor: item.color, 
+                    textColor: '#ffffff',
+                    fontWeight: 'bold',
+                    textShadow: '1px 1px 2px #000000'
+                  }
+                };
+              })}
               onStopSpinning={handleSpinStop}
               spinDuration={0.5}
               backgroundColors={['#3f2a70', '#422372', '#4a1a74', '#531777', '#5c1379']}
               textColors={['#ffffff']}
               outerBorderColor="#fcd34d"
-              outerBorderWidth={10}
+              outerBorderWidth={15}
               innerBorderColor="#30261a"
-              innerBorderWidth={5}
-              innerRadius={30}
+              innerBorderWidth={8}
+              innerRadius={20}
               radiusLineColor="#fcd34d"
-              radiusLineWidth={2}
-              fontSize={wheelItems.length > 6 ? 14 : 16}
+              radiusLineWidth={3}
+              fontSize={wheelItems.length > 8 ? 11 : wheelItems.length > 6 ? 13 : 15}
               perpendicularText={false}
-              textDistance={60}
+              textDistance={55}
               pointerProps={{
+                src: '/triangle-pointer.svg',
                 style: {
-                  left: '88%', // Sağda kalacak şekilde ayarladık
+                  right: '-15px',
                   top: '50%',
-                  transform: 'translateY(-50%)',
+                  transform: 'translateY(-50%) rotate(-90deg)',
+                  width: '55px',
+                  height: '55px',
                   zIndex: 5,
                 }
               }}
@@ -235,9 +253,10 @@ export default function WheelPage() {
             <button
               onClick={handleSpinClick}
               disabled={spinning || mustSpin}
-              className={`absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-yellow-500 text-black font-bold
+              className={`absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-yellow-500 text-black font-bold
                 flex items-center justify-center transform hover:scale-110 transition-transform 
-                focus:outline-none ${spinning || mustSpin ? 'opacity-50 cursor-not-allowed' : ''}`}
+                text-lg sm:text-xl focus:outline-none shadow-lg border-4 border-yellow-600
+                ${spinning || mustSpin ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               ÇEVİR
             </button>
@@ -245,7 +264,7 @@ export default function WheelPage() {
         </div>
       </div>
       
-      <div className="text-center w-full max-w-xl px-4">
+      <div className="text-center w-full max-w-3xl px-4">
         <p className="text-sm text-gray-400">
           Her gün yeni çevirme hakkı kazanırsınız.
         </p>
@@ -253,44 +272,35 @@ export default function WheelPage() {
       
       {/* Ödül Modalı */}
       {showReward && reward && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-lg p-8 max-w-md w-full mx-4 border border-yellow-500 text-white">
-            <h2 className="text-2xl font-bold text-center mb-4 text-yellow-400">Tebrikler!</h2>
-            <div className="text-center mb-6">
-              <div 
-                className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-4xl"
-                style={{ backgroundColor: reward.item.color }}
-              >
-                🎁
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-lg p-6 max-w-md mx-auto border-2 border-yellow-500 shadow-2xl">
+            <h2 className="text-2xl font-bold text-yellow-400 mb-4 text-center">Tebrikler!</h2>
+            <div className="bg-gray-800 p-4 rounded-lg mb-4">
+              <p className="text-white mb-2">Kazandığınız ödül:</p>
+              <p className="text-2xl font-bold text-yellow-300 mb-4">{reward.item.title}</p>
+              <p className="text-white mb-2">Ödül Kodunuz:</p>
+              <div className="bg-yellow-100 text-yellow-800 text-2xl font-mono font-bold p-3 rounded-lg text-center mb-4">
+                {reward.code}
               </div>
-              <h3 className="text-xl font-bold text-white">{reward.item.title}</h3>
-              {reward.item.description && (
-                <p className="text-gray-300 mt-2">{reward.item.description}</p>
-              )}
-            </div>
-            
-            <div className="bg-gray-800 p-4 rounded-lg text-center mb-6 border border-gray-700">
-              <p className="text-sm text-gray-300 mb-2">Promosyon Kodunuz:</p>
-              <p className="text-3xl font-mono font-bold tracking-wider text-yellow-400">{reward.code}</p>
-              <p className="text-xs text-gray-400 mt-2">
-                Bu kod 
+              <p className="text-sm text-gray-400">
+                Bu kodu mağazada göstererek ödülünüzü alabilirsiniz. Kod şu tarihe kadar geçerlidir:
+              </p>
+              <p className="text-sm font-bold text-gray-300">
                 {new Date(reward.expiresAt).toLocaleDateString('tr-TR', { 
                   day: 'numeric', 
                   month: 'long', 
                   year: 'numeric',
                   hour: '2-digit',
                   minute: '2-digit'
-                })} 
-                tarihine kadar geçerlidir.
+                })}
               </p>
             </div>
-            
             <div className="text-center">
               <button
                 onClick={closeRewardModal}
-                className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
+                className="px-6 py-2 bg-yellow-500 text-black font-bold rounded-lg hover:bg-yellow-600 transition-colors"
               >
-                Kapat
+                Tamam
               </button>
             </div>
           </div>
