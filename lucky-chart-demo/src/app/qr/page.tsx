@@ -67,13 +67,15 @@ export default function QRPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="bg-gray-900 text-white p-8 rounded-lg shadow-lg max-w-md w-full border border-gray-800">
-        <h1 className="text-3xl font-bold text-center mb-2 text-yellow-400">LuckyChart</h1>
-        <h2 className="text-xl text-center mb-6 text-gray-300">Şanslı Çark</h2>
+    <div className="min-h-screen flex items-center justify-center w-full px-4 py-6">
+      <div className="bg-gray-900 text-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md border border-gray-800">
+        <div className="flex flex-col items-center justify-center mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-center mb-2 text-yellow-400">LuckyChart</h1>
+          <h2 className="text-lg sm:text-xl text-center text-gray-300">Şanslı Çark</h2>
+        </div>
         
-        <div className="text-center mb-8">
-          <p className="text-gray-300 mb-4">
+        <div className="text-center mb-6">
+          <p className="text-gray-300">
             Çarkı çevirmek için lütfen telefon numaranızı girin:
           </p>
         </div>

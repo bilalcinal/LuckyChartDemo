@@ -168,7 +168,7 @@ export default function WheelPage() {
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black py-10">
-      <div className="text-center mb-8">
+      <div className="text-center mb-8 w-full max-w-xl px-4">
         <h1 className="text-4xl font-bold text-yellow-400">Şanslı Çark</h1>
         <p className="text-gray-300 mt-2">
           Hoş geldin, {session?.user?.phone}!
@@ -196,41 +196,48 @@ export default function WheelPage() {
         )}
       </div>
       
-      <div className="relative mb-8" style={{ width: '350px', height: '350px' }}>
-        <Wheel
-          mustStartSpinning={mustSpin}
-          prizeNumber={prizeNumber}
-          data={wheelItems.map(item => ({
-            option: item.title,
-            style: { backgroundColor: item.color, textColor: '#ffffff' }
-          }))}
-          onStopSpinning={handleSpinStop}
-          spinDuration={0.5}
-          backgroundColors={['#3f2a70', '#422372', '#4a1a74', '#531777', '#5c1379']}
-          textColors={['#ffffff']}
-          outerBorderColor="#fcd34d"
-          outerBorderWidth={10}
-          innerBorderColor="#30261a"
-          innerBorderWidth={5}
-          innerRadius={20}
-          radiusLineColor="#fcd34d"
-          radiusLineWidth={2}
-          fontSize={20}
-          perpendicularText={true}
-          textDistance={70}
-        />
-        <button
-          onClick={handleSpinClick}
-          disabled={spinning || mustSpin}
-          className={`absolute inset-0 m-auto w-20 h-20 rounded-full bg-yellow-500 text-black font-bold
-            flex items-center justify-center transform hover:scale-110 transition-transform 
-            focus:outline-none ${spinning || mustSpin ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          ÇEVİR
-        </button>
+      <div className="w-full max-w-md px-4 mx-auto mb-8">
+        <div className="relative" style={{ 
+          width: '100%', 
+          paddingBottom: '100%', /* 1:1 aspect ratio */
+        }}>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Wheel
+              mustStartSpinning={mustSpin}
+              prizeNumber={prizeNumber}
+              data={wheelItems.map(item => ({
+                option: item.title,
+                style: { backgroundColor: item.color, textColor: '#ffffff' }
+              }))}
+              onStopSpinning={handleSpinStop}
+              spinDuration={0.5}
+              backgroundColors={['#3f2a70', '#422372', '#4a1a74', '#531777', '#5c1379']}
+              textColors={['#ffffff']}
+              outerBorderColor="#fcd34d"
+              outerBorderWidth={10}
+              innerBorderColor="#30261a"
+              innerBorderWidth={5}
+              innerRadius={30}
+              radiusLineColor="#fcd34d"
+              radiusLineWidth={2}
+              fontSize={wheelItems.length > 6 ? 14 : 16}
+              perpendicularText={true}
+              textDistance={60}
+            />
+            <button
+              onClick={handleSpinClick}
+              disabled={spinning || mustSpin}
+              className={`absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-yellow-500 text-black font-bold
+                flex items-center justify-center transform hover:scale-110 transition-transform 
+                focus:outline-none ${spinning || mustSpin ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              ÇEVİR
+            </button>
+          </div>
+        </div>
       </div>
       
-      <div className="text-center">
+      <div className="text-center w-full max-w-xl px-4">
         <p className="text-sm text-gray-400">
           Her gün yeni çevirme hakkı kazanırsınız.
         </p>
