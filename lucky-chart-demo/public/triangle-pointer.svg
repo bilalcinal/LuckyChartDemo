@@ -1,4 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <polygon points="50,0 0,80 100,80" fill="#ffcc00" stroke="#000000" stroke-width="3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 300">
+  <!-- Kolun üst kısmı - Daha detaylı ve 3 boyutlu görünüm -->
+  <defs>
+    <radialGradient id="topGrad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+      <stop offset="0%" style="stop-color:#f87171;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#dc2626;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#991b1b;stop-opacity:1" />
+    </radialGradient>
+    
+    <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6b7280;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#9ca3af;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#9ca3af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6b7280;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="bottomGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4b5563;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1f2937;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+    
+    <filter id="innerShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+      <feOffset dx="0" dy="3" result="offsetBlur" />
+      <feComposite in="SourceGraphic" in2="offsetBlur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Kolun üst kısmı -->
+  <circle cx="50" cy="30" r="28" fill="url(#topGrad)" stroke="#1a202c" stroke-width="4" filter="url(#shadow)" />
+  
+  <!-- Kolun tepesindeki parlama efekti -->
+  <ellipse cx="40" cy="20" rx="12" ry="8" fill="#ffffff" fill-opacity="0.4" />
+  
+  <!-- Kolun gövdesi -->
+  <rect x="42" y="30" width="16" height="220" rx="8" fill="url(#metalGrad)" stroke="#1a202c" stroke-width="2" filter="url(#shadow)" />
+  
+  <!-- Gövdede eklem detayları -->
+  <rect x="40" y="70" width="20" height="5" rx="2" fill="#4b5563" stroke="#1a202c" stroke-width="1" />
+  <rect x="40" y="150" width="20" height="5" rx="2" fill="#4b5563" stroke="#1a202c" stroke-width="1" />
+  
+  <!-- Kolun alt kısmı -->
+  <rect x="38" y="240" width="24" height="30" rx="6" fill="url(#bottomGrad)" stroke="#1a202c" stroke-width="2" filter="url(#innerShadow)" />
+  
+  <!-- Kolun alt kısmındaki detay -->
+  <rect x="43" y="250" width="14" height="5" rx="2" fill="#374151" />
 </svg> 
