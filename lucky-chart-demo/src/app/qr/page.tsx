@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
@@ -13,9 +13,40 @@ export default function QRPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [userId, setUserId] = useState('');
+  const [activeInput, setActiveInput] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/wheel';
+
+  // Doğrulama kodu girişi için 6 ayrı input kutusu
+  const [codeDigits, setCodeDigits] = useState(['', '', '', '', '', '']);
+  
+  useEffect(() => {
+    // Kod girişlerini birleştirip state'e atama
+    const combinedCode = codeDigits.join('');
+    setVerificationCode(combinedCode);
+  }, [codeDigits]);
+  
+  const handleCodeChange = (index: number, value: string) => {
+    // Sadece rakam girişine izin ver
+    if (value && !/^\d*$/.test(value)) return;
+    
+    const newDigits = [...codeDigits];
+    newDigits[index] = value;
+    setCodeDigits(newDigits);
+    
+    // Otomatik olarak sonraki input kutusuna geç
+    if (value && index < 5) {
+      document.getElementById(`code-${index + 1}`)?.focus();
+    }
+  };
+  
+  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent) => {
+    // Backspace tuşuna basıldığında önceki input kutusuna dön
+    if (e.key === 'Backspace' && !codeDigits[index] && index > 0) {
+      document.getElementById(`code-${index - 1}`)?.focus();
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,8 +124,8 @@ export default function QRPage() {
     setError('');
 
     try {
-      if (!verificationCode) {
-        setError('Lütfen doğrulama kodunu girin');
+      if (!verificationCode || verificationCode.length !== 6) {
+        setError('Lütfen 6 haneli doğrulama kodunu girin');
         setIsLoading(false);
         return;
       }
@@ -153,126 +184,224 @@ export default function QRPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center w-full px-4 py-6">
-      <div className="bg-gray-900 text-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md border border-gray-800">
-        <div className="flex flex-col items-center justify-center mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-center mb-2 text-yellow-400">LuckyChart</h1>
-          <h2 className="text-lg sm:text-xl text-center text-gray-300">Şanslı Çark</h2>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center w-full px-4 py-6">
+      <div className="relative w-full max-w-md mx-auto">
+        {/* Arka plan efekti */}
+        <div className="absolute inset-0 blur-xl bg-yellow-500 opacity-10 rounded-xl transform -rotate-6"></div>
         
-        <div className="text-center mb-6">
-          {step === 'register' && (
-            <p className="text-gray-300">
-              Çarkı çevirmek için lütfen bilgilerinizi girin:
-            </p>
-          )}
+        <div className="relative bg-gray-900 text-white p-8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-sm border border-gray-800 overflow-hidden">
+          {/* Decorative Elements */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600"></div>
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-500 rounded-full opacity-10 blur-2xl"></div>
           
-          {step === 'verify' && (
-            <p className="text-gray-300">
-              E-posta adresinize gönderilen 6 haneli doğrulama kodunu girin:
-            </p>
-          )}
-        </div>
-        
-        {error && (
-          <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-4" role="alert">
-            <span>{error}</span>
+          <div className="flex flex-col items-center justify-center mb-8">
+            <div className="w-16 h-16 mb-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-center mb-1 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">LuckyChart</h1>
+            <h2 className="text-lg sm:text-xl text-center text-gray-300 font-light">Şanslı Çark</h2>
           </div>
-        )}
-        
-        {step === 'register' ? (
-          <form onSubmit={handleRegister}>
-            <div className="mb-4">
-              <label htmlFor="phone" className="block text-gray-300 text-sm font-bold mb-2">
-                Telefon Numarası
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                placeholder="5XX XXX XX XX"
-                className="shadow appearance-none border border-gray-700 bg-gray-800 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline focus:border-yellow-500"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-              />
+          
+          <div className={`transition-all duration-500 ease-in-out transform ${step === 'verify' ? 'opacity-0 scale-90 absolute inset-0' : 'opacity-100 scale-100'}`}>
+            <div className="text-center mb-6">
+              {step === 'register' && (
+                <p className="text-gray-300">
+                  Çarkı çevirmek için lütfen bilgilerinizi girin
+                </p>
+              )}
             </div>
+            
+            {error && step === 'register' && (
+              <div className="bg-red-900/50 backdrop-blur-sm border border-red-700/50 text-red-100 px-4 py-3 rounded-lg mb-6 animate-pulse" role="alert">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              </div>
+            )}
+            
+            {step === 'register' && (
+              <form onSubmit={handleRegister} className="space-y-6">
+                <div className="relative">
+                  <div className={`absolute inset-0 bg-gradient-to-r from-yellow-500 to-yellow-300 opacity-20 blur-md rounded-lg transition-opacity duration-300 ${activeInput === 'phone' ? 'opacity-30' : 'opacity-0'}`}></div>
+                  <label htmlFor="phone" className="block text-gray-300 text-sm font-medium mb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    Telefon Numarası
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    placeholder="5XX XXX XX XX"
+                    className="shadow appearance-none border border-gray-700 bg-gray-800/70 backdrop-blur-sm rounded-lg w-full py-3 px-4 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent transition-all duration-300"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    onFocus={() => setActiveInput('phone')}
+                    onBlur={() => setActiveInput('')}
+                    required
+                  />
+                </div>
 
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-gray-300 text-sm font-bold mb-2">
-                E-posta Adresi
-              </label>
-              <input
-                type="email"
-                id="email"
-                placeholder="ornek@mail.com"
-                className="shadow appearance-none border border-gray-700 bg-gray-800 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline focus:border-yellow-500"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+                <div className="relative">
+                  <div className={`absolute inset-0 bg-gradient-to-r from-yellow-500 to-yellow-300 opacity-20 blur-md rounded-lg transition-opacity duration-300 ${activeInput === 'email' ? 'opacity-30' : 'opacity-0'}`}></div>
+                  <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    E-posta Adresi
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    placeholder="ornek@mail.com"
+                    className="shadow appearance-none border border-gray-700 bg-gray-800/70 backdrop-blur-sm rounded-lg w-full py-3 px-4 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent transition-all duration-300"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onFocus={() => setActiveInput('email')}
+                    onBlur={() => setActiveInput('')}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <button
+                    type="submit"
+                    className={`bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 w-full transform transition-all duration-300 hover:scale-[1.02] shadow-lg ${
+                      isLoading ? 'opacity-70 pointer-events-none' : ''
+                    }`}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        İşleniyor...
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        Devam Et
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+          
+          <div className={`transition-all duration-500 ease-in-out transform ${step === 'register' ? 'opacity-0 scale-90 absolute inset-0' : 'opacity-100 scale-100'}`}>
+            <div className="text-center mb-6">
+              {step === 'verify' && (
+                <div>
+                  <p className="text-gray-300 mb-1">
+                    E-posta adresinize gönderilen doğrulama kodunu girin
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    <span className="font-medium text-yellow-500">{email}</span> adresine kod gönderildi
+                  </p>
+                </div>
+              )}
             </div>
             
-            <div className="flex items-center justify-between">
-              <button
-                type="submit"
-                className={`bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${
-                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-                disabled={isLoading}
-              >
-                {isLoading ? 'İşleniyor...' : 'Devam Et'}
-              </button>
-            </div>
-          </form>
-        ) : step === 'verify' ? (
-          <form onSubmit={handleVerify}>
-            <div className="mb-4">
-              <label htmlFor="verificationCode" className="block text-gray-300 text-sm font-bold mb-2">
-                Doğrulama Kodu
-              </label>
-              <input
-                type="text"
-                id="verificationCode"
-                placeholder="6 haneli kod"
-                className="shadow appearance-none border border-gray-700 bg-gray-800 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline focus:border-yellow-500"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                maxLength={6}
-                required
-              />
-            </div>
+            {error && step === 'verify' && (
+              <div className="bg-red-900/50 backdrop-blur-sm border border-red-700/50 text-red-100 px-4 py-3 rounded-lg mb-6 animate-pulse" role="alert">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              </div>
+            )}
             
-            <div className="flex items-center justify-between">
-              <button
-                type="submit"
-                className={`bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${
-                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-                disabled={isLoading}
-              >
-                {isLoading ? 'İşleniyor...' : 'Doğrula ve Giriş Yap'}
-              </button>
+            {step === 'verify' && (
+              <form onSubmit={handleVerify} className="space-y-6">
+                <div className="relative">
+                  <label className="block text-gray-300 text-sm font-medium mb-4 text-center">
+                    Doğrulama Kodu
+                  </label>
+                  
+                  <div className="flex justify-center gap-2 sm:gap-3">
+                    {[0, 1, 2, 3, 4, 5].map((i) => (
+                      <input
+                        key={i}
+                        id={`code-${i}`}
+                        type="text"
+                        maxLength={1}
+                        value={codeDigits[i]}
+                        onChange={(e) => handleCodeChange(i, e.target.value)}
+                        onKeyDown={(e) => handleCodeKeyDown(i, e)}
+                        className="w-10 h-14 sm:w-12 sm:h-16 text-center text-xl font-bold bg-gray-800/70 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent text-white transition-all duration-300"
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <button
+                    type="submit"
+                    className={`bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 w-full transform transition-all duration-300 hover:scale-[1.02] shadow-lg ${
+                      isLoading ? 'opacity-70 pointer-events-none' : ''
+                    }`}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        İşleniyor...
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        Doğrula ve Giriş Yap
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                </div>
+                
+                <div className="mt-4 text-center">
+                  <p className="text-gray-400 text-sm">
+                    Doğrulama kodu almadınız mı?
+                  </p>
+                  <button
+                    type="button"
+                    className="text-yellow-500 hover:text-yellow-400 text-sm mt-2 font-medium transition-colors duration-300 flex items-center justify-center mx-auto"
+                    onClick={() => setStep('register')}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Bilgileri yeniden girin
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+          
+          <div className="mt-8 text-center">
+            <div className="inline-flex items-center">
+              <div className="h-px w-8 bg-gray-700"></div>
+              <p className="text-xs text-gray-500 mx-2">KAFE ŞANS</p>
+              <div className="h-px w-8 bg-gray-700"></div>
             </div>
-            
-            <div className="mt-4 text-center">
-              <p className="text-gray-400 text-sm">
-                Doğrulama kodu almadınız mı?
-              </p>
-              <button
-                type="button"
-                className="text-yellow-400 hover:text-yellow-300 text-sm mt-2"
-                onClick={() => setStep('register')}
-              >
-                Bilgileri yeniden girin
-              </button>
-            </div>
-          </form>
-        ) : null}
-        
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-400">
-            Bu uygulama, Kafe Şans'ın özel promosyon uygulamasıdır.
-          </p>
+            <p className="text-xs text-gray-500 mt-2">
+              Bu uygulama, Kafe Şans'ın özel promosyon uygulamasıdır.
+            </p>
+          </div>
         </div>
       </div>
     </div>
