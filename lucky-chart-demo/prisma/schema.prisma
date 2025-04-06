@@ -81,6 +81,7 @@ model Employee {
   fullName   String
   phone      String
   email      String?
+  password   String?  // Şifre alanı opsiyonel olarak eklendi
   position   String
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())

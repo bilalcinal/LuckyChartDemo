@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcrypt';
 
 // GET - Tüm çalışanları getir
 export async function GET(request: NextRequest) {
@@ -34,12 +35,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Bu işlem için yetkiniz bulunmamaktadır' }, { status: 403 });
     }
 
-    const { fullName, phone, email, position, isActive } = await request.json();
+    const { fullName, phone, email, position, isActive, password } = await request.json();
 
     // Zorunlu alanları kontrol et
     if (!fullName || !phone || !position) {
       return NextResponse.json({ error: 'Ad Soyad, Telefon ve Pozisyon alanları zorunludur' }, { status: 400 });
     }
+
+    // Şifre hashleme
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
 
     // Yeni çalışan oluştur
     const employee = await prisma.employee.create({
@@ -47,6 +51,7 @@ export async function POST(request: NextRequest) {
         fullName,
         phone,
         email: email || null,
+        password: hashedPassword,
         position,
         isActive: isActive === undefined ? true : isActive,
       },
@@ -69,7 +74,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Bu işlem için yetkiniz bulunmamaktadır' }, { status: 403 });
     }
 
-    const { id, fullName, phone, email, position, isActive } = await request.json();
+    const { id, fullName, phone, email, position, isActive, password } = await request.json();
 
     // Zorunlu alanları kontrol et
     if (!id || !fullName || !phone || !position) {
@@ -85,6 +90,12 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Çalışan bulunamadı' }, { status: 404 });
     }
 
+    // Şifre hashleme - sadece şifre değiştiyse
+    let hashedPassword = existingEmployee.password;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
     // Çalışanı güncelle
     const updatedEmployee = await prisma.employee.update({
       where: { id },
@@ -92,6 +103,7 @@ export async function PUT(request: NextRequest) {
         fullName,
         phone,
         email: email || null,
+        password: hashedPassword,
         position,
         isActive: isActive === undefined ? true : isActive,
       },

@@ -19,6 +19,7 @@ export type Employee = {
   fullName: string;
   phone: string;
   email: string | null;
+  password: string | null;
   position: string;
   isActive: boolean;
   createdAt: Date;

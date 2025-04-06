@@ -10,6 +10,7 @@ type Employee = {
   fullName: string;
   phone: string;
   email: string | null;
+  password?: string | null;
   position: string;
   isActive: boolean;
   createdAt: string;
@@ -24,10 +25,19 @@ export default function AdminEmployees() {
   const [error, setError] = useState('');
   
   // Yeni çalışan için form durumu
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    id?: string;
+    fullName: string;
+    phone: string;
+    email: string;
+    password: string;
+    position: string;
+    isActive: boolean;
+  }>({
     fullName: '',
     phone: '',
     email: '',
+    password: '',
     position: '',
     isActive: true,
   });
@@ -84,6 +94,7 @@ export default function AdminEmployees() {
       fullName: '',
       phone: '',
       email: '',
+      password: '',
       position: '',
       isActive: true,
     });
@@ -92,9 +103,11 @@ export default function AdminEmployees() {
   
   const handleEdit = (item: Employee) => {
     setFormData({
+      id: item.id,
       fullName: item.fullName,
       phone: item.phone,
       email: item.email || '',
+      password: '',
       position: item.position,
       isActive: item.isActive,
     });
@@ -247,101 +260,112 @@ export default function AdminEmployees() {
               
               <div className="mt-5 md:mt-0 md:col-span-2">
                 <form onSubmit={handleSubmit}>
-                  <div className="grid grid-cols-6 gap-6">
-                    <div className="col-span-6 sm:col-span-3">
-                      <label htmlFor="fullName" className="block text-sm font-medium text-gray-300">
-                        Ad Soyad
-                      </label>
-                      <input
-                        type="text"
-                        name="fullName"
-                        id="fullName"
-                        required
-                        value={formData.fullName}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full border border-gray-700 bg-gray-800 text-white rounded-md shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
-                      />
-                    </div>
-                    
-                    <div className="col-span-6 sm:col-span-3">
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-300">
-                        Telefon
-                      </label>
-                      <input
-                        type="text"
-                        name="phone"
-                        id="phone"
-                        required
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full border border-gray-700 bg-gray-800 text-white rounded-md shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
-                      />
+                  <div className="overflow-hidden shadow sm:rounded-md">
+                    <div className="space-y-6 bg-gray-900 px-4 py-5 sm:p-6">
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                          <label htmlFor="fullName" className="block text-sm font-medium text-gray-300">
+                            Ad Soyad
+                          </label>
+                          <input
+                            type="text"
+                            name="fullName"
+                            id="fullName"
+                            value={formData.fullName}
+                            onChange={handleInputChange}
+                            required
+                            className="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-white shadow-sm focus:border-violet-500 focus:ring-violet-500 sm:text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="phone" className="block text-sm font-medium text-gray-300">
+                            Telefon
+                          </label>
+                          <input
+                            type="text"
+                            name="phone"
+                            id="phone"
+                            value={formData.phone}
+                            onChange={handleInputChange}
+                            required
+                            className="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-white shadow-sm focus:border-violet-500 focus:ring-violet-500 sm:text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+                            E-posta
+                          </label>
+                          <input
+                            type="email"
+                            name="email"
+                            id="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            className="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-white shadow-sm focus:border-violet-500 focus:ring-violet-500 sm:text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+                            Şifre {editingId && <span className="text-xs text-gray-400">(Sadece değiştirmek istiyorsanız doldurun)</span>}
+                          </label>
+                          <input
+                            type="password"
+                            name="password"
+                            id="password"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            className="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-white shadow-sm focus:border-violet-500 focus:ring-violet-500 sm:text-sm"
+                            required={!editingId}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="position" className="block text-sm font-medium text-gray-300">
+                            Pozisyon
+                          </label>
+                          <input
+                            type="text"
+                            name="position"
+                            id="position"
+                            value={formData.position}
+                            onChange={handleInputChange}
+                            required
+                            className="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-white shadow-sm focus:border-violet-500 focus:ring-violet-500 sm:text-sm"
+                          />
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            id="isActive"
+                            name="isActive"
+                            type="checkbox"
+                            checked={formData.isActive}
+                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                            className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-violet-600 focus:ring-violet-500"
+                          />
+                          <label htmlFor="isActive" className="ml-2 block text-sm font-medium text-gray-300">
+                            Aktif
+                          </label>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="col-span-6 sm:col-span-3">
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                        E-posta
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        id="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full border border-gray-700 bg-gray-800 text-white rounded-md shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
-                      />
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => { resetForm(); setShowForm(false); }}
+                        className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"
+                      >
+                        İptal
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className={`px-4 py-2 bg-yellow-500 text-black rounded-md hover:bg-yellow-600 ${
+                          submitting ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        {submitting ? 'Kaydediliyor...' : (editingId ? 'Güncelle' : 'Ekle')}
+                      </button>
                     </div>
-                    
-                    <div className="col-span-6 sm:col-span-3">
-                      <label htmlFor="position" className="block text-sm font-medium text-gray-300">
-                        Pozisyon
-                      </label>
-                      <input
-                        type="text"
-                        name="position"
-                        id="position"
-                        required
-                        value={formData.position}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full border border-gray-700 bg-gray-800 text-white rounded-md shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
-                      />
-                    </div>
-                    
-                    <div className="col-span-6 sm:col-span-3">
-                      <label htmlFor="isActive" className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="isActive"
-                          id="isActive"
-                          checked={formData.isActive}
-                          onChange={handleInputChange}
-                          className="h-4 w-4 text-yellow-500 focus:ring-yellow-500 border-gray-400 rounded"
-                        />
-                        <span className="ml-2 text-sm text-gray-300">Aktif</span>
-                      </label>
-                      <p className="mt-1 text-xs text-gray-400">
-                        İşaretlenirse, bu çalışan aktif olarak gösterilir.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 flex justify-end space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => { resetForm(); setShowForm(false); }}
-                      className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"
-                    >
-                      İptal
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className={`px-4 py-2 bg-yellow-500 text-black rounded-md hover:bg-yellow-600 ${
-                        submitting ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                    >
-                      {submitting ? 'Kaydediliyor...' : (editingId ? 'Güncelle' : 'Ekle')}
-                    </button>
                   </div>
                 </form>
               </div>
