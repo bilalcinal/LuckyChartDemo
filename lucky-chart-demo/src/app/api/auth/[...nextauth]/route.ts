@@ -3,7 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
 import { AuthOptions, DefaultSession } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 // Kullanıcı tipi tanımlaması
 type SansliCarkUser = {
