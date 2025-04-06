@@ -1,10 +1,9 @@
-import cron from 'node-cron';
-import fetch from 'node-fetch';
-
-// Ayrı bir process'de (örneğin, standalone bir Node.js server) kullanılacak olan zamanlayıcı
+// CommonJS formatında zamanlayıcı modülü
+const cron = require('node-cron');
+const fetch = require('node-fetch');
 
 // Günlük gece 12:00'da çalışacak cron görevi (çevirme haklarını sıfırlar)
-export function scheduleDailySpinReset() {
+function scheduleDailySpinReset() {
   // Her gün gece 00:00'da çalış (Türkiye saati)
   return cron.schedule('0 0 * * *', async () => {
     console.log('Günlük çarkı çevirme hakları sıfırlanıyor...');
@@ -25,7 +24,7 @@ export function scheduleDailySpinReset() {
 }
 
 // Test için her dakika çalışacak cron görevi (çevirme haklarını yeniler)
-export function scheduleOneMinuteSpinReset() {
+function scheduleOneMinuteSpinReset() {
   // Her dakika çalış (* * * * *)
   return cron.schedule('* * * * *', async () => {
     console.log('Test: Her dakika çarkı çevirme hakları yenileniyor...');
@@ -46,7 +45,7 @@ export function scheduleOneMinuteSpinReset() {
 }
 
 // SMS zamanlamalarını kontrol eden cron görevi (her dakika çalışır)
-export function scheduleSmsCheck() {
+function scheduleSmsCheck() {
   // Her dakika çalış
   return cron.schedule('* * * * *', async () => {
     console.log('SMS zamanlamaları kontrol ediliyor...');
@@ -69,7 +68,7 @@ export function scheduleSmsCheck() {
 }
 
 // Tüm zamanlayıcıları başlat
-export function startAllSchedulers() {
+function startAllSchedulers() {
   const spinResetJob = scheduleDailySpinReset();
   const oneMinuteSpinResetJob = scheduleOneMinuteSpinReset(); // Test için dakikalık yenileme
   const smsCheckJob = scheduleSmsCheck();
@@ -89,4 +88,11 @@ export function startAllSchedulers() {
       console.log('Tüm zamanlayıcılar durduruldu.');
     }
   };
-} 
+}
+
+module.exports = {
+  scheduleDailySpinReset,
+  scheduleOneMinuteSpinReset,
+  scheduleSmsCheck,
+  startAllSchedulers
+}; 

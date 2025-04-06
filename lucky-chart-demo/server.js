@@ -1,9 +1,24 @@
+// Bu dosya çark çevirme haklarının düzenli olarak yenilenmesi için cron işlerini çalıştırır
+const { startAllSchedulers } = require('./src/lib/scheduler-cjs');
+
+// Test modu aktif: Çevirme hakları her dakika yenilenecek
+console.log('TEST MODU AKTIF: Çevirme hakları her dakika yenilecek!');
+
+// Burada tüm zamanlanmış işleri başlatıyoruz
+try {
+  startAllSchedulers();
+  console.log('Tüm zamanlayıcılar başarıyla başlatıldı.');
+  console.log('Not: TEST MODU - Çark çevirme hakları her dakika yenileniyor');
+} catch (error) {
+  console.error('Zamanlayıcılar başlatılırken hata oluştu:', error);
+}
+
 // SMS ve zamanlanmış görevler için standalone server
-const { startAllSchedulers } = require('./dist/lib/scheduler');
 const cron = require('node-cron');
 const axios = require('axios');
 
 console.log('ŞanslıÇark Zamanlayıcı Servisi başlatılıyor...');
+console.log('TEST MODU AKTIF: Çevirme hakları her dakika yenilenecek!');
 
 let schedulers = null;
 
@@ -30,6 +45,7 @@ setTimeout(() => {
   try {
     schedulers = startAllSchedulers();
     console.log('Tüm zamanlayıcılar başarıyla başlatıldı!');
+    console.log('Not: TEST MODU - Çark çevirme hakları her dakika yenileniyor');
   } catch (error) {
     console.error('Zamanlayıcı başlatma hatası:', error);
   }
