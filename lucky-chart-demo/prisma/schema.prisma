@@ -71,3 +71,15 @@ model Admin {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// OTP model for SMS verification
+model OTP {
+  id        String   @id @default(uuid())
+  phone     String
+  code      String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+
+  @@index([phone])
+}
