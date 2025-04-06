@@ -1,7 +1,9 @@
 // SMS ve zamanlanmış görevler için standalone server
 const { startAllSchedulers } = require('./dist/lib/scheduler');
+const cron = require('node-cron');
+const axios = require('axios');
 
-console.log('LuckyChart Zamanlayıcı Servisi başlatılıyor...');
+console.log('ŞanslıÇark Zamanlayıcı Servisi başlatılıyor...');
 
 let schedulers = null;
 
@@ -33,5 +35,5 @@ setTimeout(() => {
   }
 }, 5000); // 5 saniye bekle
 
-console.log('LuckyChart Zamanlayıcı Servisi başlatıldı!');
+console.log('ŞanslıÇark Zamanlayıcı Servisi başlatıldı!');
 console.log('Durdurmak için CTRL+C tuşlarına basın.'); 

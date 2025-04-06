@@ -5,10 +5,13 @@ import { AuthOptions, DefaultSession } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import bcrypt from 'bcrypt';
 
-// Özel kullanıcı tipimizi tanımlıyoruz
-type LuckyChartUser = {
+// Kullanıcı tipi tanımlaması
+type SansliCarkUser = {
   id: string;
   phone: string;
+  email?: string | null;
+  isVerified?: boolean;
+  lastLogin?: Date;
   spinsRemaining: number;
   role?: string;
 };
@@ -85,7 +88,7 @@ export const authOptions: AuthOptions = {
           phone: user.phone,
           spinsRemaining: user.spinsRemaining,
           role: 'USER'
-        } as LuckyChartUser;
+        } as SansliCarkUser;
       },
     }),
     
@@ -119,7 +122,7 @@ export const authOptions: AuthOptions = {
           phone: 'admin', // Bu alan kullanılmıyor ama tip için gerekli
           spinsRemaining: 0, // Bu alan kullanılmıyor ama tip için gerekli
           role: 'ADMIN'
-        } as LuckyChartUser;
+        } as SansliCarkUser;
       }
     })
   ],

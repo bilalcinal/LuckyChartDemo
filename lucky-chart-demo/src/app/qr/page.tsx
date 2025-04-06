@@ -225,8 +225,8 @@ export default function QRPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-center mb-1 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">LuckyChart</h1>
-            <h2 className="text-lg sm:text-xl text-center text-gray-300 font-light">Şanslı Çark</h2>
+            <h1 className="text-3xl sm:text-4xl font-bold text-center mb-1 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">ŞanslıÇark</h1>
+            <h2 className="text-lg sm:text-xl text-center text-gray-300 font-light">Akyazı Macbear</h2>
           </div>
           
           {/* Register Form - z-index eklendi */}
@@ -422,11 +422,11 @@ export default function QRPage() {
           <div className="mt-8 text-center relative z-10">
             <div className="inline-flex items-center">
               <div className="h-px w-8 bg-gray-700"></div>
-              <p className="text-xs text-gray-500 mx-2">KAFE ŞANS</p>
+              <p className="text-xs text-gray-500 mx-2">AKYAZI MACBEAR</p>
               <div className="h-px w-8 bg-gray-700"></div>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Bu uygulama, Kafe Şans'ın özel promosyon uygulamasıdır.
+              Bu uygulama, Akyazı Macbear'ın özel promosyon uygulamasıdır.
             </p>
           </div>
         </div>

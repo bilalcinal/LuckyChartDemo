@@ -35,6 +35,7 @@ export default function JackpotPage() {
   const [existingReward, setExistingReward] = useState<RewardDetails | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState(-1);
+  const [latestPrizeShown, setLatestPrizeShown] = useState(false);
   
   // Animasyon için slotRef ve animationRef
   const slotRef = useRef<HTMLDivElement>(null);
@@ -123,6 +124,7 @@ export default function JackpotPage() {
       console.error('Çevirme hatası:', error);
       if (error.message.includes('Bugün için çevirme hakkınız')) {
         setError('Bugünlük hakkınız bitti, lütfen yarın tekrar deneyiniz.');
+        setLatestPrizeShown(true);
         if (existingReward) {
           setReward(existingReward);
           setShowReward(true);
@@ -240,7 +242,7 @@ export default function JackpotPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black py-10">
       <div className="text-center mb-8 w-full max-w-3xl px-4">
-        <h1 className="text-5xl font-bold text-yellow-400 mb-2 filter drop-shadow-lg">Şanslı Jackpot</h1>
+        <h1 className="text-5xl font-bold text-yellow-400 mb-2 filter drop-shadow-lg">ŞanslıÇark</h1>
         <p className="text-gray-300 text-lg">
           Hoş geldin, <span className="font-semibold text-yellow-200">{session?.user?.phone}</span>!
           Kolu çekerek şansını dene.
@@ -252,6 +254,7 @@ export default function JackpotPage() {
               <div className="mt-3 p-3 bg-gray-800/60 rounded-lg">
                 <p className="text-sm">Mevcut kodunuz:</p> 
                 <span className="font-bold text-xl text-yellow-300 block my-1">{existingReward.code}</span>
+                <p className="text-sm text-gray-300 mb-1">Ödülünüz: <span className="font-medium text-yellow-200">{existingReward.item.title}</span></p>
                 <span className="text-xs text-gray-300 block">
                   {"Bugün 23:59'a kadar geçerlidir."}
                 </span>
@@ -397,7 +400,6 @@ export default function JackpotPage() {
                 className="text-yellow-400 font-bold text-2xl" 
                 style={{ textShadow: '0 0 10px rgba(251, 191, 36, 0.7)' }}
               >
-                JACKPOT
               </div>
               <div className="flex space-x-3">
                 {[1, 2, 3, 4].map(num => (
@@ -561,6 +563,30 @@ export default function JackpotPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      
+      {/* Kullanıcının döndürme hakkı kalmadığında gösterilecek mesaj */}
+      {session && session.user && (session.user.spinsRemaining <= 0 || latestPrizeShown) && (
+        <div className="bg-black/80 backdrop-blur-md border border-yellow-600/20 rounded-xl p-6 text-center mx-auto max-w-md">
+          <div className="text-yellow-500 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-xl text-white font-bold mb-2">Bugünlük hakkınız bitti</h3>
+          <p className="text-gray-300 mb-4">Lütfen yarın tekrar deneyiniz.</p>
+          
+          {existingReward && (
+            <div className="mt-4 border-t border-yellow-600/20 pt-4">
+              <p className="text-sm text-gray-400 mb-2">Son kazandığınız ödül:</p>
+              <p className="text-base text-yellow-200 font-medium mb-2">{existingReward.item.title}</p>
+              <div className="bg-gradient-to-r from-yellow-800/20 to-yellow-600/20 p-3 rounded-lg">
+                <span className="font-mono text-lg text-yellow-500 font-bold tracking-wider">{existingReward.code}</span>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">{"Bugün 23:59'a kadar geçerlidir."}</p>
+            </div>
+          )}
         </div>
       )}
       

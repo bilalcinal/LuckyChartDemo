@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "LuckyChart - Şanslı Çark",
+  title: "ŞanslıÇark - Akyazı Macbear",
   description: "Şansınızı çevirip özel indirimler kazanın",
 };
 
