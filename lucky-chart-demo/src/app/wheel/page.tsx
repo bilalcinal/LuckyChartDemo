@@ -429,33 +429,77 @@ export default function JackpotPage() {
             </div>
           </div>
           
+          {/* Çekme kolu yerine yuvarlak buton */}
           <div className="relative ml-8">
             <button
               onClick={handleSpinClick}
               disabled={spinning}
-              className={`relative flex flex-col items-center transform transition-all duration-300 ${
-                spinning ? 'translate-y-24 opacity-80 cursor-not-allowed' : 'hover:scale-105 hover:brightness-110'
+              className={`relative flex flex-col items-center justify-center transform transition-all duration-300 ${
+                spinning ? 'cursor-not-allowed scale-95' : 'hover:scale-105'
               }`}
-              style={{ 
-                width: isMobile ? '70px' : '90px',
-                filter: spinning ? 'none' : 'drop-shadow(0 5px 15px rgba(0,0,0,0.4))'
-              }}
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-700 rounded-full border-4 border-gray-800 shadow-lg z-10"
-                   style={{ boxShadow: '0 5px 15px rgba(0,0,0,0.3), inset 0 2px 5px rgba(255,255,255,0.3)' }}>
+              {/* Ana buton */}
+              <div 
+                className={`w-28 h-28 rounded-full shadow-lg flex items-center justify-center border-8 transition-all duration-500 ${
+                  spinning ? 'bg-gradient-to-br from-green-500 to-green-700 border-green-800' : 'bg-gradient-to-br from-red-500 to-red-700 border-gray-800 hover:from-red-600 hover:to-red-800'
+                }`}
+                style={{ 
+                  boxShadow: spinning 
+                    ? '0 0 30px rgba(22, 163, 74, 0.6), inset 0 2px 10px rgba(255, 255, 255, 0.3)' 
+                    : '0 0 30px rgba(220, 38, 38, 0.4), inset 0 2px 10px rgba(255, 255, 255, 0.3)'
+                }}
+              >
+                {/* İç içe daireler efekti */}
+                <div 
+                  className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-500 ${
+                    spinning ? 'bg-green-600' : 'bg-red-600'
+                  }`}
+                  style={{
+                    boxShadow: 'inset 0 2px 8px rgba(0, 0, 0, 0.5)'
+                  }}
+                >
+                  <div 
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-2xl transition-all duration-500 ${
+                      spinning ? 'bg-green-700' : 'bg-red-700'
+                    }`}
+                    style={{
+                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)'
+                    }}
+                  >
+                    {spinning ? (
+                      // Dönerken animasyonlu nokta
+                      <div className="flex space-x-1">
+                        <span className="animate-bounce" style={{ animationDelay: '0ms' }}>•</span>
+                        <span className="animate-bounce" style={{ animationDelay: '150ms' }}>•</span>
+                        <span className="animate-bounce" style={{ animationDelay: '300ms' }}>•</span>
+                      </div>
+                    ) : (
+                      // Durum metni
+                      "ÇEVİR"
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="w-5 h-40 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full shadow-md transform -translate-y-2"
-                   style={{ boxShadow: 'inset -1px 0 3px rgba(255,255,255,0.3)' }}>
-              </div>
-              <div className="w-8 h-8 bg-gradient-to-b from-gray-700 to-gray-900 rounded-b-xl shadow-inner transform -translate-y-2"
-                   style={{ boxShadow: 'inset 0 -2px 5px rgba(0,0,0,0.5)' }}>
-              </div>
-              <div className="mt-5 text-yellow-400 font-bold text-center text-xl filter drop-shadow-lg"
-                   style={{ 
-                     textShadow: '0 0 10px rgba(251, 191, 36, 0.5)',
-                     opacity: spinning ? 0.7 : 1
-                   }}>
-                {spinning ? "DÖNÜYOR" : "ÇEK"}
+              
+              {/* Buton altındaki parlama efekti */}
+              <div 
+                className={`absolute -bottom-5 w-20 h-3 transition-all duration-300 rounded-full blur-md ${
+                  spinning ? 'bg-green-500 opacity-70' : 'bg-red-500 opacity-50'
+                }`}
+              ></div>
+              
+              {/* Durum metni */}
+              <div 
+                className={`mt-7 font-bold text-center text-xl filter drop-shadow-lg transition-all duration-300 ${
+                  spinning ? 'text-green-400' : 'text-red-400'
+                }`}
+                style={{ 
+                  textShadow: spinning 
+                    ? '0 0 10px rgba(22, 163, 74, 0.5)' 
+                    : '0 0 10px rgba(220, 38, 38, 0.5)',
+                }}
+              >
+                {spinning ? "DÖNÜYOR" : "BAŞLAT"}
               </div>
             </button>
           </div>
