@@ -24,27 +24,6 @@ export function scheduleDailySpinReset() {
   });
 }
 
-// Test için her dakika çalışacak cron görevi (çevirme haklarını yeniler)
-export function scheduleOneMinuteSpinReset() {
-  // Her dakika çalış (* * * * *)
-  return cron.schedule('* * * * *', async () => {
-    console.log('Test: Her dakika çarkı çevirme hakları yenileniyor...');
-    
-    try {
-      const response = await fetch('http://localhost:3000/api/cron/reset-spins?isTest=true');
-      const data = await response.json();
-      
-      if (data.success) {
-        console.log(`Başarılı! ${data.usersUpdated} kullanıcının çarkı çevirme hakları dakikalık olarak yenilendi.`);
-      } else {
-        console.error('Dakikalık çevirme haklarını yenileme hatası:', data.error);
-      }
-    } catch (error) {
-      console.error('Dakikalık çevirme haklarını yenileme API hatası:', error);
-    }
-  });
-}
-
 // SMS zamanlamalarını kontrol eden cron görevi (her dakika çalışır)
 export function scheduleSmsCheck() {
   // Her dakika çalış
@@ -71,20 +50,17 @@ export function scheduleSmsCheck() {
 // Tüm zamanlayıcıları başlat
 export function startAllSchedulers() {
   const spinResetJob = scheduleDailySpinReset();
-  const oneMinuteSpinResetJob = scheduleOneMinuteSpinReset(); // Test için dakikalık yenileme
   const smsCheckJob = scheduleSmsCheck();
   
   console.log('Tüm zamanlayıcılar başlatıldı.');
   
   return {
     spinResetJob,
-    oneMinuteSpinResetJob,
     smsCheckJob,
     
     // Tüm görevleri durdur
     stopAll: () => {
       spinResetJob.stop();
-      oneMinuteSpinResetJob.stop();
       smsCheckJob.stop();
       console.log('Tüm zamanlayıcılar durduruldu.');
     }

@@ -1,21 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// API endpoint, gece 12:00'da veya test için dakikada bir kez çağrılabilir
+// API endpoint, gece 12:00'da çağrılır ve tüm kullanıcıların çark haklarını yeniler
 export async function GET(request: Request) {
   try {
-    // İstek URL'sinden isTest parametresini kontrol et
-    const url = new URL(request.url);
-    const isTest = url.searchParams.get('isTest') === 'true';
-    
-    let message = 'Çarkı çevirme hakları günlük olarak yenilendi';
-    
-    if (isTest) {
-      message = 'Çarkı çevirme hakları test için dakikalık olarak yenilendi';
-      console.log('Test modu: Dakikalık çevirme hakkı yenileniyor');
-    } else {
-      console.log('Normal mod: Günlük çevirme hakkı yenileniyor');
-    }
+    console.log('Günlük çevirme hakkı yenileniyor - gece 00:00');
     
     // Tüm aktif kullanıcıların çevirme haklarını sıfırla
     const updateResult = await prisma.user.updateMany({
@@ -27,13 +16,12 @@ export async function GET(request: Request) {
       },
     });
     
-    console.log(`${updateResult.count} kullanıcının çarkı çevirme hakları yenilendi (${isTest ? 'Test modu' : 'Normal mod'})`);
+    console.log(`${updateResult.count} kullanıcının çarkı çevirme hakları yenilendi`);
     
     return NextResponse.json({
       success: true,
-      message,
-      usersUpdated: updateResult.count,
-      isTest
+      message: 'Çarkı çevirme hakları günlük olarak yenilendi',
+      usersUpdated: updateResult.count
     });
     
   } catch (error) {
