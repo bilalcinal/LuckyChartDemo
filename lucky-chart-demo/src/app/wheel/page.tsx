@@ -252,12 +252,16 @@ export default function JackpotPage() {
             <p className="font-bold">{error}</p>
             {existingReward && (
               <div className="mt-3 p-3 bg-gray-800/60 rounded-lg">
-                <p className="text-sm">Mevcut kodunuz:</p> 
-                <span className="font-bold text-xl text-yellow-300 block my-1">{existingReward.code}</span>
-                <p className="text-sm text-gray-300 mb-1">Ödülünüz: <span className="font-medium text-yellow-200">{existingReward.item.title}</span></p>
-                <span className="text-xs text-gray-300 block">
-                  {"Bugün 23:59'a kadar geçerlidir."}
-                </span>
+                <p className="text-sm mb-1">Mevcut kodunuz:</p> 
+                <div className="bg-yellow-900/30 p-2 rounded-lg mb-2">
+                  <span className="font-mono text-xl text-yellow-400 font-bold tracking-wider">{existingReward.code}</span>
+                </div>
+                <p className="text-sm text-gray-300 mb-2">Kazandığınız: <span className="font-medium text-yellow-200">{existingReward.item.title}</span></p>
+                <div className="bg-gray-800/80 p-1 rounded-lg inline-block">
+                  <span className="text-sm text-yellow-300 font-medium">
+                    {"Bugün 23:59'a kadar geçerlidir"}
+                  </span>
+                </div>
               </div>
             )}
           </div>
@@ -579,12 +583,14 @@ export default function JackpotPage() {
           
           {existingReward && (
             <div className="mt-4 border-t border-yellow-600/20 pt-4">
-              <p className="text-sm text-gray-400 mb-2">Son kazandığınız ödül:</p>
-              <p className="text-base text-yellow-200 font-medium mb-2">{existingReward.item.title}</p>
-              <div className="bg-gradient-to-r from-yellow-800/20 to-yellow-600/20 p-3 rounded-lg">
-                <span className="font-mono text-lg text-yellow-500 font-bold tracking-wider">{existingReward.code}</span>
+              <p className="text-sm text-gray-400 mb-1">Mevcut kodunuz:</p>
+              <div className="bg-yellow-900/30 p-3 rounded-lg mb-3">
+                <span className="font-mono text-xl text-yellow-400 font-bold tracking-wider">{existingReward.code}</span>
               </div>
-              <p className="text-xs text-gray-400 mt-2">{"Bugün 23:59'a kadar geçerlidir."}</p>
+              <p className="text-base text-yellow-200 font-medium mb-3">Kazandığınız: <span className="font-semibold">{existingReward.item.title}</span></p>
+              <div className="bg-gray-800/60 p-2 rounded-lg inline-block">
+                <p className="text-sm text-yellow-300 font-medium">{"Bugün 23:59'a kadar geçerlidir"}</p>
+              </div>
             </div>
           )}
         </div>
