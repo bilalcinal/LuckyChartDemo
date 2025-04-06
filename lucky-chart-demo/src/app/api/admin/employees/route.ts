@@ -35,11 +35,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Bu işlem için yetkiniz bulunmamaktadır' }, { status: 403 });
     }
 
-    const { fullName, phone, email, position, isActive, password } = await request.json();
+    const { fullName, username, phone, email, position, isActive, password } = await request.json();
 
     // Zorunlu alanları kontrol et
-    if (!fullName || !phone || !position) {
-      return NextResponse.json({ error: 'Ad Soyad, Telefon ve Pozisyon alanları zorunludur' }, { status: 400 });
+    if (!fullName || !username || !phone || !position) {
+      return NextResponse.json({ error: 'Ad Soyad, Kullanıcı Adı, Telefon ve Pozisyon alanları zorunludur' }, { status: 400 });
+    }
+
+    // Kullanıcı adı benzersizliğini kontrol et
+    const existingUser = await prisma.employee.findUnique({
+      where: { username },
+    });
+
+    if (existingUser) {
+      return NextResponse.json({ error: 'Bu kullanıcı adı zaten kullanılıyor' }, { status: 400 });
     }
 
     // Şifre hashleme
@@ -49,6 +58,7 @@ export async function POST(request: NextRequest) {
     const employee = await prisma.employee.create({
       data: {
         fullName,
+        username,
         phone,
         email: email || null,
         password: hashedPassword,
@@ -74,11 +84,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Bu işlem için yetkiniz bulunmamaktadır' }, { status: 403 });
     }
 
-    const { id, fullName, phone, email, position, isActive, password } = await request.json();
+    const { id, fullName, username, phone, email, position, isActive, password } = await request.json();
 
     // Zorunlu alanları kontrol et
-    if (!id || !fullName || !phone || !position) {
-      return NextResponse.json({ error: 'ID, Ad Soyad, Telefon ve Pozisyon alanları zorunludur' }, { status: 400 });
+    if (!id || !fullName || !username || !phone || !position) {
+      return NextResponse.json({ error: 'ID, Ad Soyad, Kullanıcı Adı, Telefon ve Pozisyon alanları zorunludur' }, { status: 400 });
     }
 
     // Çalışanın varlığını kontrol et
@@ -88,6 +98,17 @@ export async function PUT(request: NextRequest) {
 
     if (!existingEmployee) {
       return NextResponse.json({ error: 'Çalışan bulunamadı' }, { status: 404 });
+    }
+
+    // Kullanıcı adı değiştiyse benzersizliğini kontrol et
+    if (username !== existingEmployee.username) {
+      const existingUser = await prisma.employee.findUnique({
+        where: { username },
+      });
+
+      if (existingUser) {
+        return NextResponse.json({ error: 'Bu kullanıcı adı zaten kullanılıyor' }, { status: 400 });
+      }
     }
 
     // Şifre hashleme - sadece şifre değiştiyse
@@ -101,6 +122,7 @@ export async function PUT(request: NextRequest) {
       where: { id },
       data: {
         fullName,
+        username,
         phone,
         email: email || null,
         password: hashedPassword,

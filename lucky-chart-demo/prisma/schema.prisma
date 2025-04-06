@@ -79,6 +79,7 @@ model Admin {
 model Employee {
   id         String   @id @default(uuid())
   fullName   String
+  username   String   @unique
   phone      String
   email      String?
   password   String?  // Şifre alanı opsiyonel olarak eklendi

@@ -21,6 +21,57 @@ async function main() {
     console.log('Admin kullanıcısı oluşturuldu');
   }
 
+  // Örnek çalışanlar oluştur
+  const employeeCount = await prisma.employee.count();
+
+  if (employeeCount === 0) {
+    await prisma.employee.createMany({
+      data: [
+        {
+          id: uuidv4(),
+          fullName: 'Ahmet Yılmaz',
+          username: 'ahmet',
+          password: await bcrypt.hash('ahmet123', 10),
+          phone: '+905551112233',
+          email: 'ahmet@example.com',
+          position: 'Kasiyer',
+          isActive: true,
+        },
+        {
+          id: uuidv4(),
+          fullName: 'Ayşe Demir',
+          username: 'ayse',
+          password: await bcrypt.hash('ayse123', 10),
+          phone: '+905552223344',
+          email: 'ayse@example.com',
+          position: 'Barista',
+          isActive: true,
+        },
+        {
+          id: uuidv4(),
+          fullName: 'Mehmet Kaya',
+          username: 'mehmet',
+          password: await bcrypt.hash('mehmet123', 10),
+          phone: '+905553334455',
+          email: 'mehmet@example.com',
+          position: 'Garson',
+          isActive: true,
+        },
+        {
+          id: uuidv4(),
+          fullName: 'Zeynep Çelik',
+          username: 'zeynep',
+          password: await bcrypt.hash('zeynep123', 10),
+          phone: '+905554445566',
+          email: 'zeynep@example.com',
+          position: 'Mutfak Şefi',
+          isActive: true,
+        },
+      ],
+    });
+    console.log('Örnek çalışanlar oluşturuldu');
+  }
+
   // Örnek çark öğeleri oluştur
   const wheelItemCount = await prisma.wheelItem.count();
 

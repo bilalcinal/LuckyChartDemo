@@ -17,6 +17,7 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 export type Employee = {
   id: string;
   fullName: string;
+  username: string;
   phone: string;
   email: string | null;
   password: string | null;

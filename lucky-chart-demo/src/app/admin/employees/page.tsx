@@ -8,6 +8,7 @@ import Link from 'next/link';
 type Employee = {
   id: string;
   fullName: string;
+  username: string;
   phone: string;
   email: string | null;
   password?: string | null;
@@ -28,6 +29,7 @@ export default function AdminEmployees() {
   const [formData, setFormData] = useState<{
     id?: string;
     fullName: string;
+    username: string;
     phone: string;
     email: string;
     password: string;
@@ -35,6 +37,7 @@ export default function AdminEmployees() {
     isActive: boolean;
   }>({
     fullName: '',
+    username: '',
     phone: '',
     email: '',
     password: '',
@@ -92,6 +95,7 @@ export default function AdminEmployees() {
   const resetForm = () => {
     setFormData({
       fullName: '',
+      username: '',
       phone: '',
       email: '',
       password: '',
@@ -105,6 +109,7 @@ export default function AdminEmployees() {
     setFormData({
       id: item.id,
       fullName: item.fullName,
+      username: item.username,
       phone: item.phone,
       email: item.email || '',
       password: '',
@@ -278,6 +283,20 @@ export default function AdminEmployees() {
                           />
                         </div>
                         <div>
+                          <label htmlFor="username" className="block text-sm font-medium text-gray-300">
+                            Kullanıcı Adı
+                          </label>
+                          <input
+                            type="text"
+                            name="username"
+                            id="username"
+                            value={formData.username}
+                            onChange={handleInputChange}
+                            required
+                            className="mt-1 block w-full rounded-md border-gray-600 bg-gray-800 text-white shadow-sm focus:border-violet-500 focus:ring-violet-500 sm:text-sm"
+                          />
+                        </div>
+                        <div>
                           <label htmlFor="phone" className="block text-sm font-medium text-gray-300">
                             Telefon
                           </label>
@@ -386,6 +405,9 @@ export default function AdminEmployees() {
                     Ad Soyad
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Kullanıcı Adı
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Telefon
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
@@ -408,6 +430,9 @@ export default function AdminEmployees() {
                     <tr key={employee.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-white">{employee.fullName}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-300">{employee.username}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-300">{employee.phone}</div>
