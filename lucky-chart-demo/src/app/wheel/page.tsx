@@ -34,25 +34,19 @@ export default function JackpotPage() {
   const [error, setError] = useState('');
   const [existingReward, setExistingReward] = useState<RewardDetails | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [slotPosition, setSlotPosition] = useState(0);
   const [winnerIndex, setWinnerIndex] = useState(-1);
   
+  // Animasyon için slotRef ve animationRef
   const slotRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
   
-  // Mobil/masaüstü tespiti için
+  // Mobil/masaüstü tespiti
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
-    // İlk yükleme kontrolü
     checkIfMobile();
-    
-    // Ekran boyutu değiştiğinde kontrol et
     window.addEventListener('resize', checkIfMobile);
-    
-    // Temizlik
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
   
@@ -63,37 +57,29 @@ export default function JackpotPage() {
     }
   }, [status, router]);
   
-  // Ödül öğelerini ve kullanıcının mevcut ödüllerini getir
+  // Ödül öğelerini ve mevcut ödülleri getir
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Ödül öğelerini getir
         const itemsResponse = await fetch('/api/admin/wheel-items');
         if (!itemsResponse.ok) {
           throw new Error('Ödül öğeleri getirilemedi');
         }
-        
         const itemsData = await itemsResponse.json();
-        // Sadece aktif öğeleri al
         const activeItems = itemsData.filter((item: WheelItem & { isActive: boolean }) => item.isActive);
-        
         if (!activeItems.length) {
           setError('Aktif ödül öğesi bulunamadı');
           return;
         }
-        
         setRewardItems(activeItems);
         
-        // Kullanıcının mevcut ödüllerini getir
         const rewardsResponse = await fetch('/api/wheel/rewards');
         if (rewardsResponse.ok) {
           const rewardsData = await rewardsResponse.json();
           if (rewardsData.rewards && rewardsData.rewards.length > 0) {
-            // Süresi geçmemiş en son ödülü al
             const latestReward = rewardsData.rewards.find((r: RewardDetails) => 
               new Date(r.expiresAt) > new Date()
             );
-            
             if (latestReward) {
               setExistingReward(latestReward);
             }
@@ -121,34 +107,22 @@ export default function JackpotPage() {
       const response = await fetch('/api/wheel/spin', {
         method: 'POST',
       });
-      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Çevirme hatası');
       }
-      
       const data = await response.json();
-      
-      // Kazanılan ödülü bul
       const winIndex = rewardItems.findIndex(item => item.id === data.reward.item.id);
-      
       if (winIndex === -1) {
         throw new Error('Kazanılan ödül listede bulunamadı');
       }
-      
       setReward(data.reward);
-      
-      // Animasyonu başlat
       startSlotAnimation(winIndex);
       
     } catch (error: any) {
       console.error('Çevirme hatası:', error);
-      
-      // Kullanıcının günlük hakkı bitti mesajını kontrol et
       if (error.message.includes('Bugün için çevirme hakkınız')) {
         setError('Bugünlük hakkınız bitti, lütfen yarın tekrar deneyiniz.');
-        
-        // Mevcut ödülü göster (varsa)
         if (existingReward) {
           setReward(existingReward);
           setShowReward(true);
@@ -156,47 +130,73 @@ export default function JackpotPage() {
       } else {
         setError(error.message || 'Çevirme sırasında bir hata oluştu');
       }
-      
       setSpinning(false);
     }
   };
   
   const startSlotAnimation = (winIndex: number) => {
-    // Animasyon parametreleri - daha akıcı animasyon için optimizasyon
-    const duration = 5000; // 5 saniye toplam süre - daha uzun ve akıcı bir animasyon
+    const duration = 8000; // 8 saniye
     const startTime = performance.now();
-    const totalFrames = rewardItems.length * 20; // Daha fazla kare - daha akıcı görünüm
-    const frameHeight = 100; // Her kare yüksekliği (px olarak)
+    const totalFrames = rewardItems.length * 15; 
+    const frameHeight = 100; // px cinsinden her hediyenin yüksekliği
+    const randomOffset = Math.floor(Math.random() * rewardItems.length) * frameHeight;
+    const finalPosition = winIndex * frameHeight;
     
-    // Son pozisyonu hesapla (kazanan öğeyi ortalamak için)
-    const finalPosition = (winIndex * frameHeight);
+    // Başlangıçta slot'u ayarla
+    if (slotRef.current) {
+      slotRef.current.style.transform = `translateY(${-randomOffset}px)`;
+    }
     
-    // Animasyonu başlat
     const animate = (currentTime: number) => {
       const elapsedTime = currentTime - startTime;
       const progress = Math.min(elapsedTime / duration, 1);
       
-      // Gelişmiş easing fonksiyonu - daha gerçekçi slot makinesi efekti
-      let easeProgress;
-      
-      if (progress < 0.7) {
-        // İlk %70'lik kısımda hızlı ve sabit dönüş
-        easeProgress = progress / 0.7 * 0.8; // Toplam mesafenin %80'i
+      let easeProgress: number;
+      if (progress < 0.15) {
+        easeProgress = progress * (progress / 0.15) * 0.1;
+      } else if (progress < 0.7) {
+        easeProgress = 0.1 + ((progress - 0.15) / 0.55) * 0.6;
       } else {
-        // Son %30'luk kısımda yavaşlayarak durma
         const slowProgress = (progress - 0.7) / 0.3;
-        // İyileştirilmiş yavaşlama fonksiyonu
-        easeProgress = 0.8 + 0.2 * (1 - Math.pow(1 - slowProgress, 4));
+        easeProgress = 0.7 + 0.3 * (1 - Math.pow(1 - slowProgress, 2.5));
       }
       
       if (progress < 1) {
-        // Döngüyü devam ettir
-        const currentPosition = (totalFrames * frameHeight) * easeProgress;
-        setSlotPosition(-(currentPosition % (rewardItems.length * frameHeight)) + finalPosition);
+        const totalDistance = totalFrames * frameHeight;
+        const currentDistance = totalDistance * easeProgress;
+        let newPosition = -randomOffset - currentDistance;
+        
+        // Son aşamada düzeltme yaparak kazanan hediyeye yaklaş
+        if (progress > 0.8) {
+          const correctionFactor = (progress - 0.8) / 0.2;
+          const targetPosition = -finalPosition;
+          const actualPosition = newPosition % (rewardItems.length * frameHeight);
+          const correction = (targetPosition - actualPosition) * correctionFactor;
+          newPosition = newPosition + correction;
+          if (progress > 0.95) {
+            newPosition = -finalPosition;
+          }
+        }
+        
+        // Döngüsel animasyon: Yeni pozisyonu toplam döngü yüksekliğine göre ayarla
+        const totalCycle = rewardItems.length * frameHeight;
+        let effectivePosition;
+        if (progress < 0.95) {
+          // newPosition negatif olduğundan, mod alırken pozitif değer elde etmek için:
+          effectivePosition = -(( -newPosition ) % totalCycle);
+        } else {
+          effectivePosition = newPosition;
+        }
+        
+        if (slotRef.current) {
+          slotRef.current.style.transform = `translateY(${effectivePosition}px)`;
+        }
+        
         animationRef.current = requestAnimationFrame(animate);
       } else {
-        // Animasyon bittiğinde
-        setSlotPosition(-finalPosition);
+        if (slotRef.current) {
+          slotRef.current.style.transform = `translateY(${-finalPosition}px)`;
+        }
         setWinnerIndex(winIndex);
         handleSpinStop();
       }
@@ -206,7 +206,6 @@ export default function JackpotPage() {
       cancelAnimationFrame(animationRef.current);
     }
     
-    // Kolu çekme efekti - çekildikten 500ms sonra dönme başlasın
     setTimeout(() => {
       animationRef.current = requestAnimationFrame(animate);
     }, 500);
@@ -223,7 +222,6 @@ export default function JackpotPage() {
     setShowReward(false);
   };
   
-  // Oturum yükleniyor veya ödül öğeleri henüz yüklenmediyse
   if (status === 'loading' || !rewardItems.length) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black">
@@ -235,9 +233,8 @@ export default function JackpotPage() {
     );
   }
   
-  // Kullanıcı kimliği doğrulanmadıysa
   if (status === 'unauthenticated') {
-    return null; // useEffect içerisinde yönlendirme yapılacak
+    return null;
   }
   
   return (
@@ -270,10 +267,9 @@ export default function JackpotPage() {
         )}
       </div>
       
-      {/* Jackpot Makinesi - İyileştirilmiş Tasarım */}
+      {/* Jackpot Makinesi */}
       <div className="relative w-full max-w-4xl mx-auto mb-12">
         <div className="flex items-center justify-center">
-          {/* Gelişmiş Slot Makinesi */}
           <div 
             className="relative rounded-2xl shadow-[0_0_50px_rgba(255,204,0,0.3)] p-8 pt-10" 
             style={{ 
@@ -282,7 +278,6 @@ export default function JackpotPage() {
               boxShadow: 'inset 0 0 25px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.7)'
             }}
           >
-            {/* Süslemeler ve ışıklar - üst kısım */}
             <div className="absolute top-0 left-0 w-full flex justify-center">
               <div className="grid grid-cols-7 gap-3 -mt-4 mb-2">
                 {[...Array(7)].map((_, i) => (
@@ -299,7 +294,6 @@ export default function JackpotPage() {
               </div>
             </div>
             
-            {/* Ekran - Geliştirilen Slot Ekranı */}
             <div 
               className="bg-black rounded-xl overflow-hidden mb-6" 
               style={{ 
@@ -309,9 +303,7 @@ export default function JackpotPage() {
                 border: '6px solid #333'
               }}
             >
-              {/* Görünen alan maskesi */}
               <div className="relative h-full w-full overflow-hidden">
-                {/* Işık efekti - ekran parlaması */}
                 <div 
                   className="absolute inset-0 pointer-events-none z-20" 
                   style={{
@@ -319,47 +311,84 @@ export default function JackpotPage() {
                   }}
                 />
                 
-                {/* Spin pozisyonu göstergesi (orta çizgi) */}
+                {spinning && (
+                  <div className="absolute inset-0 pointer-events-none z-10 opacity-60">
+                    {[...Array(12)].map((_, i) => (
+                      <div 
+                        key={i} 
+                        className="absolute w-full h-px bg-white/30"
+                        style={{ 
+                          top: `${i * 8}%`,
+                          animationName: 'slotSpeed',
+                          animationDuration: '0.15s',
+                          animationTimingFunction: 'linear',
+                          animationIterationCount: 'infinite'
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+                
                 <div className="absolute top-1/2 left-0 w-full z-10 transform -translate-y-1/2 flex items-center justify-center">
                   <div className="w-full h-1 bg-yellow-500 opacity-70"></div>
                   <div className="absolute w-6 h-6 rounded-full bg-yellow-500 -left-3 shadow-[0_0_10px_#ffcc00]"></div>
                   <div className="absolute w-6 h-6 rounded-full bg-yellow-500 -right-3 shadow-[0_0_10px_#ffcc00]"></div>
                 </div>
                 
-                {/* Slot elemanları - İyileştirilmiş Görsel */}
+                {winnerIndex >= 0 && (
+                  <div 
+                    className="absolute left-0 w-full z-5 transition-opacity duration-500"
+                    style={{ 
+                      top: '50%',
+                      height: '100px',
+                      transform: 'translateY(-50%)',
+                      background: 'linear-gradient(to bottom, rgba(255,215,0,0) 0%, rgba(255,215,0,0.2) 50%, rgba(255,215,0,0) 100%)',
+                      boxShadow: 'inset 0 0 30px rgba(255,215,0,0.3)',
+                      opacity: 1,
+                      animation: 'pulse 2s infinite'
+                    }}
+                  />
+                )}
+                
+                {/* Slot elemanları */}
                 <div 
                   ref={slotRef}
-                  className="absolute w-full"
+                  className="absolute w-full will-change-transform"
                   style={{ 
-                    transform: `translateY(${slotPosition}px)`,
-                    top: '0',
-                    transition: spinning ? 'transform 150ms linear' : 'transform 500ms cubic-bezier(0.23, 1, 0.32, 1)'
+                    transform: 'translateY(0px)',
+                    top: '0'
                   }}
                 >
-                  {/* Öğeleri tekrarlayarak pürüzsüz döngü sağlama */}
-                  {[...rewardItems, ...rewardItems, ...rewardItems].map((item, index) => (
+                  {[...rewardItems, ...rewardItems, ...rewardItems, ...rewardItems, ...rewardItems].map((item, index) => (
                     <div 
                       key={index} 
-                      className="flex items-center justify-center text-center p-3"
+                      className={`flex items-center justify-center text-center p-3 ${
+                        winnerIndex >= 0 && index % rewardItems.length === winnerIndex 
+                          ? 'relative z-10 transition-all duration-500' 
+                          : ''
+                      }`}
                       style={{ 
                         height: '100px',
                         background: item.color,
                         borderTop: '2px solid rgba(255,255,255,0.3)',
                         borderBottom: '2px solid rgba(0,0,0,0.4)',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
                         transform: winnerIndex >= 0 && index % rewardItems.length === winnerIndex 
                           ? 'scale(1.05)' 
                           : 'scale(1)',
-                        boxShadow: winnerIndex >= 0 && index % rewardItems.length === winnerIndex 
-                          ? 'inset 0 0 20px rgba(255,255,255,0.5), 0 0 15px rgba(255,215,0,0.7)' 
+                        backgroundImage: winnerIndex >= 0 && index % rewardItems.length === winnerIndex 
+                          ? 'radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, rgba(0,0,0,0) 70%)' 
                           : 'none',
-                        transition: 'all 0.3s ease-out',
-                        zIndex: winnerIndex >= 0 && index % rewardItems.length === winnerIndex ? 5 : 1
                       }}
                     >
                       <div className="text-white font-bold text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" 
                         style={{ 
                           lineHeight: '1.2',
-                          textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                          textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                          letterSpacing: '0.5px',
+                          maxWidth: '95%',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
                         }}>
                         {item.title}
                       </div>
@@ -369,7 +398,6 @@ export default function JackpotPage() {
               </div>
             </div>
             
-            {/* Makine gövdesi */}
             <div className="relative flex justify-between items-center">
               <div 
                 className="text-yellow-400 font-bold text-2xl" 
@@ -377,8 +405,6 @@ export default function JackpotPage() {
               >
                 JACKPOT
               </div>
-              
-              {/* Işıklar */}
               <div className="flex space-x-3">
                 {[1, 2, 3, 4].map(num => (
                   <div 
@@ -398,13 +424,11 @@ export default function JackpotPage() {
               </div>
             </div>
             
-            {/* Para yuvası */}
             <div className="mt-6 rounded-lg p-2 mx-auto w-24 bg-gradient-to-b from-gray-700 to-gray-900 border-2 border-gray-600">
               <div className="h-2 w-full bg-black rounded-lg"></div>
             </div>
           </div>
           
-          {/* Geliştirilmiş Kol */}
           <div className="relative ml-8">
             <button
               onClick={handleSpinClick}
@@ -417,22 +441,15 @@ export default function JackpotPage() {
                 filter: spinning ? 'none' : 'drop-shadow(0 5px 15px rgba(0,0,0,0.4))'
               }}
             >
-              {/* Kolun üst kısmı */}
               <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-700 rounded-full border-4 border-gray-800 shadow-lg z-10"
                    style={{ boxShadow: '0 5px 15px rgba(0,0,0,0.3), inset 0 2px 5px rgba(255,255,255,0.3)' }}>
               </div>
-              
-              {/* Kolun gövdesi */}
               <div className="w-5 h-40 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full shadow-md transform -translate-y-2"
                    style={{ boxShadow: 'inset -1px 0 3px rgba(255,255,255,0.3)' }}>
               </div>
-              
-              {/* Kolun alt kısmı */}
               <div className="w-8 h-8 bg-gradient-to-b from-gray-700 to-gray-900 rounded-b-xl shadow-inner transform -translate-y-2"
                    style={{ boxShadow: 'inset 0 -2px 5px rgba(0,0,0,0.5)' }}>
               </div>
-              
-              {/* Metin */}
               <div className="mt-5 text-yellow-400 font-bold text-center text-xl filter drop-shadow-lg"
                    style={{ 
                      textShadow: '0 0 10px rgba(251, 191, 36, 0.5)',
@@ -451,7 +468,6 @@ export default function JackpotPage() {
         </p>
       </div>
       
-      {/* Geliştirilmiş Ödül Modalı */}
       {showReward && reward && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div 
@@ -516,7 +532,6 @@ export default function JackpotPage() {
         </div>
       )}
       
-      {/* Özel CSS Animasyonları */}
       <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -534,6 +549,17 @@ export default function JackpotPage() {
           100% { transform: translateY(0px); }
         }
         
+        @keyframes pulse {
+          0% { opacity: 0.2; }
+          50% { opacity: 0.8; }
+          100% { opacity: 0.2; }
+        }
+        
+        @keyframes slotSpeed {
+          from { transform: translateY(0); }
+          to { transform: translateY(8px); }
+        }
+        
         .animate-fadeIn {
           animation: fadeIn 0.5s ease-out forwards;
         }
@@ -548,4 +574,4 @@ export default function JackpotPage() {
       `}</style>
     </div>
   );
-} 
+}
