@@ -34,6 +34,8 @@ export default function AdminWheelItems() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [totalProbability, setTotalProbability] = useState(0);
+  const [hasDefaultItem, setHasDefaultItem] = useState(false);
   
   // Oturum kontrolü
   useEffect(() => {
@@ -68,12 +70,35 @@ export default function AdminWheelItems() {
     }
   }, [status]);
   
+  // Toplam olasılık hesapla
+  useEffect(() => {
+    if (wheelItems.length > 0) {
+      // "Yarın Tekrar Deneyiniz" öğesi hariç toplam olasılığı hesapla
+      const defaultItem = wheelItems.find(item => item.title === "Yarın Tekrar Deneyiniz");
+      setHasDefaultItem(!!defaultItem);
+      
+      const total = wheelItems.reduce((sum, item) => {
+        // "Yarın Tekrar Deneyiniz" öğesini toplama dahil etme
+        if (item.title === "Yarın Tekrar Deneyiniz") return sum;
+        return sum + item.probability;
+      }, 0);
+      
+      setTotalProbability(total);
+    }
+  }, [wheelItems]);
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
     
     if (type === 'checkbox') {
       const { checked } = e.target as HTMLInputElement;
       setFormData(prev => ({ ...prev, [name]: checked }));
+    } else if (name === 'probability') {
+      // Olasılık değerini yüzdelik değerden ondalık değere dönüştür (örn: 5 -> 0.05)
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        setFormData(prev => ({ ...prev, [name]: numValue / 100 }));
+      }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -95,7 +120,8 @@ export default function AdminWheelItems() {
       title: item.title,
       description: item.description || '',
       color: item.color,
-      probability: item.probability,
+      // Ondalık olasılık değerini yüzdelik gösterim için çarp (örn: 0.05 -> 5)
+      probability: item.probability * 100,
       isActive: item.isActive,
     });
     setEditingId(item.id);
@@ -170,6 +196,109 @@ export default function AdminWheelItems() {
     }
   };
   
+  // Öğeyi yarın tekrar deneyin olarak işaretle
+  const markAsDefaultItem = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/wheel-items`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: id,
+          title: "Yarın Tekrar Deneyiniz",
+          description: "Bugün için şansınız bitti, yarın tekrar deneyiniz.",
+          isActive: true,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Öğe güncellenemedi');
+      }
+      
+      const updatedItem = await response.json();
+      
+      // UI'ı güncelle
+      setWheelItems(prev => prev.map(item => item.id === id ? updatedItem : item));
+      
+    } catch (error) {
+      console.error('Öğe güncelleme hatası:', error);
+      setError('Öğe "Yarın Tekrar Deneyiniz" olarak ayarlanırken bir hata oluştu');
+    }
+  };
+
+  // Varsayılan öğeyi oluştur
+  const createDefaultItem = async () => {
+    try {
+      setSubmitting(true);
+      
+      const response = await fetch('/api/admin/wheel-items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: "Yarın Tekrar Deneyiniz",
+          description: "Bugün için şansınız bitti, yarın tekrar deneyiniz.",
+          color: "#cccccc", // Gri renk
+          probability: 1.0 - totalProbability, // Geri kalan olasılık
+          isActive: true,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Varsayılan öğe eklenemedi');
+      }
+      
+      const newItem = await response.json();
+      
+      // UI'ı güncelle
+      setWheelItems(prev => [newItem, ...prev]);
+      setHasDefaultItem(true);
+      
+    } catch (error) {
+      console.error('Varsayılan öğe ekleme hatası:', error);
+      setError('Varsayılan "Yarın Tekrar Deneyiniz" öğesi eklenirken bir hata oluştu');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  
+  // Varsayılan öğeyi güncelle
+  const updateDefaultItemProbability = async () => {
+    try {
+      const defaultItem = wheelItems.find(item => item.title === "Yarın Tekrar Deneyiniz");
+      if (!defaultItem) return;
+      
+      // Geri kalan olasılık
+      const remainingProbability = Math.max(0, 1.0 - totalProbability);
+      
+      const response = await fetch(`/api/admin/wheel-items`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: defaultItem.id,
+          probability: remainingProbability,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Varsayılan öğe olasılığı güncellenemedi');
+      }
+      
+      const updatedItem = await response.json();
+      
+      // UI'ı güncelle
+      setWheelItems(prev => prev.map(item => item.id === defaultItem.id ? updatedItem : item));
+      
+    } catch (error) {
+      console.error('Varsayılan öğe güncelleme hatası:', error);
+      setError('Varsayılan öğe olasılığı güncellenirken bir hata oluştu');
+    }
+  };
+  
   // Yükleniyor kontrolü
   if (status === 'loading' || loading) {
     return (
@@ -213,7 +342,36 @@ export default function AdminWheelItems() {
           </div>
         </div>
         
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-between mb-6">
+          <div>
+            <div className="bg-gray-900 p-4 rounded-lg mb-4">
+              <h2 className="text-lg text-yellow-400 mb-2">Olasılık Bilgisi:</h2>
+              <p>Toplam Atanan Olasılık: <span className="text-yellow-400 font-bold">%{(totalProbability * 100).toFixed(2)}</span></p>
+              <p>Geri Kalan Olasılık: <span className="text-yellow-400 font-bold">%{((1 - totalProbability) * 100).toFixed(2)}</span></p>
+              <p className="text-sm text-gray-400 mt-2">
+                Not: Geri kalan olasılık "Yarın Tekrar Deneyiniz" öğesine atanacaktır.
+              </p>
+            </div>
+            
+            {!hasDefaultItem ? (
+              <button
+                onClick={createDefaultItem}
+                disabled={submitting}
+                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md mr-2"
+              >
+                {submitting ? 'İşleniyor...' : '"Yarın Tekrar Deneyiniz" Öğesi Oluştur'}
+              </button>
+            ) : (
+              <button
+                onClick={updateDefaultItemProbability}
+                disabled={submitting}
+                className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md mr-2"
+              >
+                {submitting ? 'İşleniyor...' : 'Varsayılan Öğe Olasılığını Güncelle'}
+              </button>
+            )}
+          </div>
+          
           <button
             onClick={() => { resetForm(); setShowForm(!showForm); }}
             className={`px-4 py-2 rounded-md ${
@@ -300,20 +458,26 @@ export default function AdminWheelItems() {
                     
                     <div className="col-span-6 sm:col-span-3">
                       <label htmlFor="probability" className="block text-sm font-medium text-gray-300">
-                        Olasılık Değeri (0.1 - 2.0)
+                        Olasılık (%)
                       </label>
-                      <input
-                        type="number"
-                        name="probability"
-                        id="probability"
-                        min="0.1"
-                        max="2.0"
-                        step="0.1"
-                        required
-                        value={formData.probability}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full border border-gray-700 bg-gray-800 text-white rounded-md shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
-                      />
+                      <div className="mt-1 flex items-center">
+                        <input
+                          type="number"
+                          name="probability"
+                          id="probability"
+                          min="0.01"
+                          max="100"
+                          step="0.01"
+                          required
+                          value={formData.probability * 100}
+                          onChange={handleInputChange}
+                          className="block w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                        />
+                        <span className="ml-3 text-gray-300">%</span>
+                      </div>
+                      <p className="mt-1 text-sm text-gray-400">
+                        Ödülün çarkta çıkma olasılığı. Örnek: %5 = 0.05 (toplam yüzdelik %100 = 1.0)
+                      </p>
                     </div>
                     
                     <div className="col-span-6 sm:col-span-3">
@@ -424,12 +588,29 @@ export default function AdminWheelItems() {
                         >
                           Düzenle
                         </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="text-red-500 hover:text-red-400"
-                        >
-                          Sil
-                        </button>
+                        {item.title !== "Yarın Tekrar Deneyiniz" ? (
+                          <>
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              className="text-red-500 hover:text-red-400 mr-4"
+                            >
+                              Sil
+                            </button>
+                            <button
+                              onClick={() => markAsDefaultItem(item.id)}
+                              className="text-yellow-400 hover:text-yellow-300"
+                            >
+                              Varsayılan Olarak Ayarla
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={updateDefaultItemProbability}
+                            className="text-green-400 hover:text-green-300"
+                          >
+                            Olasılığı Güncelle
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))

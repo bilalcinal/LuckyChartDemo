@@ -87,27 +87,59 @@ export async function POST(req: NextRequest) {
     
     // Olasılıklara göre çark öğesini seç
     let totalProbability = 0;
+    
+    // Toplam olasılık değerini hesapla (tüm aktif öğelerin olasılıklarının toplamı)
     for (const item of wheelItems) {
       totalProbability += item.probability;
     }
     
-    const randomValue = Math.random() * totalProbability;
-    let cumulativeProbability = 0;
-    let selectedItem = wheelItems[0]; // Varsayılan olarak ilk öğeyi al
+    // Eğer toplam olasılık 1.0'dan farklıysa normalize et
+    const normalizationFactor = Math.abs(totalProbability - 1.0) < 0.00001 ? 1.0 : 1.0 / totalProbability;
     
+    // Rastgele bir değer üret (0-1 arasında)
+    const randomValue = Math.random();
+    
+    // Kümülatif olasılık hesaplaması
+    let cumulativeProbability = 0;
+    let selectedItem = null;
+    
+    console.log(`Çark çevirme - Toplam olasılık: ${totalProbability}, Normalizasyon faktörü: ${normalizationFactor}`);
+    
+    // Ağırlıklı olasılık seçimi
     for (const item of wheelItems) {
-      cumulativeProbability += item.probability;
+      // Normalize edilmiş olasılık
+      const normalizedProbability = item.probability * normalizationFactor;
+      cumulativeProbability += normalizedProbability;
+      
+      console.log(`Öğe: ${item.title}, Olasılık: ${item.probability}, Normalize: ${normalizedProbability}, Kümülatif: ${cumulativeProbability}`);
+      
+      // Rastgele değer kümülatif olasılıktan küçük veya eşitse bu öğeyi seç
       if (randomValue <= cumulativeProbability) {
         selectedItem = item;
+        console.log(`Seçilen öğe: ${item.title}, Olasılık: ${item.probability}`);
         break;
       }
+    }
+    
+    // Eğer hala bir öğe seçilmediyse (yuvarlama hataları gibi durumlar için) son öğeyi seç
+    if (!selectedItem && wheelItems.length > 0) {
+      selectedItem = wheelItems[wheelItems.length - 1];
+      console.log(`Öğe seçilemedi, son öğe seçildi: ${selectedItem.title}`);
+    }
+    
+    // Eğer hala öğe seçilemezse hata döndür
+    if (!selectedItem) {
+      return NextResponse.json(
+        { error: 'Ödül seçimi sırasında bir hata oluştu' },
+        { status: 500 }
+      );
     }
     
     // Benzersiz kod oluştur ve veritabanına kaydet
     const uniqueCode = generateUniqueCode();
     const expiresAt = getNextDayMidnight();
     
-    // Ödülü kayet
+    // Ödülü kaydet
     const reward = await prisma.reward.create({
       data: {
         code: uniqueCode,
