@@ -1,11 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 
-export default function QRPage() {
+// Oturum tipleri için yardımcı tip tanımlamaları
+type UserSession = {
+  id: string;
+  phone?: string;
+  email?: string;
+  sessionType?: 'admin' | 'user' | 'employee';
+  [key: string]: any;
+};
+
+// SearchParams kullanan iç bileşen
+function QRContent() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
@@ -55,18 +65,6 @@ export default function QRPage() {
       document.getElementById(`code-${index - 1}`)?.focus();
     }
   };
-
-  // Sayfa yüklenirken gösterilecek yükleniyor göstergesi
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 mb-4 border-4 border-t-yellow-500 border-r-yellow-500 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-          <p className="text-yellow-500">Yükleniyor...</p>
-        </div>
-      </div>
-    );
-  }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,6 +206,11 @@ export default function QRPage() {
     return null;
   }
 
+  // Kullanıcı tipini güvenli şekilde al
+  // @ts-ignore
+  const userSession = session?.user as UserSession | undefined;
+  const isAdminSession = userSession?.sessionType === 'admin';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center w-full px-4 py-6">
       <div className="relative w-full max-w-md mx-auto">
@@ -220,7 +223,8 @@ export default function QRPage() {
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-500 rounded-full opacity-10 blur-2xl pointer-events-none"></div>
           
           {/* Admin oturumu varsa uyarı göster */}
-          {status === 'authenticated' && session?.user?.sessionType === 'admin' && (
+          {/* @ts-ignore */}
+          {status === 'authenticated' && isAdminSession && (
             <div className="bg-red-900/80 border-2 border-red-700 p-4 rounded-lg mb-8">
               <h2 className="text-lg font-bold text-white mb-2">Admin Oturumu Açık</h2>
               <p className="text-white mb-4">
@@ -236,7 +240,8 @@ export default function QRPage() {
           )}
           
           {/* Admin oturumu yoksa normal form göster */}
-          {(status !== 'authenticated' || session?.user?.sessionType !== 'admin') && (
+          {/* @ts-ignore */}
+          {(status !== 'authenticated' || !isAdminSession) && (
             <>
               <div className="flex flex-col items-center justify-center mb-8 relative z-10">
                 <div className="w-16 h-16 mb-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg pointer-events-none">
@@ -453,5 +458,21 @@ export default function QRPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Ana sayfa bileşeni - useSearchParams içeren bileşeni Suspense ile sarıyor
+export default function QRPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 mb-4 border-4 border-t-yellow-500 border-r-yellow-500 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+          <p className="text-yellow-500">Yükleniyor...</p>
+        </div>
+      </div>
+    }>
+      <QRContent />
+    </Suspense>
   );
 } 

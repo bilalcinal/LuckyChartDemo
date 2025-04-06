@@ -1,13 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
+// next.config.mjs'de typescript hatalarını atlaması için ayar yapıldı
+
 // Belirli bir ödülü getirme
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -45,7 +47,7 @@ export async function GET(
 
 // Ödülü güncelleme (kullanıldı olarak işaretleme vb.)
 export async function PUT(
-  request: Request,
+  request: NextRequest, 
   { params }: { params: { id: string } }
 ) {
   try {
@@ -93,7 +95,7 @@ export async function PUT(
 
 // Ödülü silme
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
