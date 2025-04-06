@@ -269,7 +269,7 @@ export default function JackpotPage() {
       
       {/* Jackpot Makinesi */}
       <div className="relative w-full max-w-4xl mx-auto mb-12">
-        <div className="flex items-center justify-center">
+        <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} items-center justify-center`}>
           <div 
             className="relative rounded-2xl shadow-[0_0_50px_rgba(255,204,0,0.3)] p-8 pt-10" 
             style={{ 
@@ -430,7 +430,7 @@ export default function JackpotPage() {
           </div>
           
           {/* Çekme kolu yerine yuvarlak buton */}
-          <div className="relative ml-8">
+          <div className={`relative ${isMobile ? 'mt-8' : 'ml-8'}`}>
             <button
               onClick={handleSpinClick}
               disabled={spinning}
