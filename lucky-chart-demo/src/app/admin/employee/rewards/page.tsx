@@ -104,12 +104,18 @@ export default function EmployeeRewardsPage() {
         throw new Error('Ödül durumu güncellenirken bir hata oluştu');
       }
 
-      // Yerel state'i güncelle
-      setRewards((currentRewards) =>
-        currentRewards.map((reward) =>
-          reward.id === id ? { ...reward, isUsed } : reward
-        )
+      // Ana ödül listesini güncelle
+      const updatedRewards = rewards.map((reward) =>
+        reward.id === id ? { ...reward, isUsed } : reward
       );
+      setRewards(updatedRewards);
+      
+      // Filtrelenmiş ödül listesini de güncelle
+      const updatedFilteredRewards = filteredRewards.map((reward) =>
+        reward.id === id ? { ...reward, isUsed } : reward
+      );
+      setFilteredRewards(updatedFilteredRewards);
+      
     } catch (error) {
       console.error('Ödül durumu güncellenirken hata:', error);
       setError('Ödül durumu güncellenirken bir hata oluştu');
