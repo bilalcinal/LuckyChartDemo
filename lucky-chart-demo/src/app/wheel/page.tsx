@@ -36,6 +36,7 @@ export default function JackpotPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [winnerIndex, setWinnerIndex] = useState(-1);
   const [latestPrizeShown, setLatestPrizeShown] = useState(false);
+  const [spinsRemaining, setSpinsRemaining] = useState(0);
   
   // Animasyon için slotRef ve animationRef
   const slotRef = useRef<HTMLDivElement>(null);
@@ -74,6 +75,13 @@ export default function JackpotPage() {
         }
         setRewardItems(activeItems);
         
+        // Kullanıcı bilgilerini getir (spinsRemaining için)
+        const userInfoResponse = await fetch('/api/users/me');
+        if (userInfoResponse.ok) {
+          const userData = await userInfoResponse.json();
+          setSpinsRemaining(userData.spinsRemaining || 0);
+        }
+        
         const rewardsResponse = await fetch('/api/wheel/rewards');
         if (rewardsResponse.ok) {
           const rewardsData = await rewardsResponse.json();
@@ -100,6 +108,17 @@ export default function JackpotPage() {
   const handleSpinClick = async () => {
     if (spinning || !rewardItems.length) return;
     
+    // Çevirme hakkı kontrolü
+    if (spinsRemaining <= 0) {
+      setError('Bugün için çevirme hakkınız kalmadı. Yarın tekrar deneyiniz.');
+      // Son kazanılan ödülü göster (varsa)
+      if (existingReward) {
+        setReward(existingReward);
+        setShowReward(true);
+      }
+      return;
+    }
+    
     setError('');
     setSpinning(true);
     setWinnerIndex(-1);
@@ -118,6 +137,9 @@ export default function JackpotPage() {
         throw new Error('Kazanılan ödül listede bulunamadı');
       }
       setReward(data.reward);
+      // Çevirme hakkını güncelle
+      setSpinsRemaining(prevSpins => Math.max(0, prevSpins - 1));
+      
       startSlotAnimation(winIndex);
       
     } catch (error: any) {
@@ -246,6 +268,9 @@ export default function JackpotPage() {
         <p className="text-gray-300 text-lg">
           Hoş geldin, <span className="font-semibold text-yellow-200">{session?.user?.phone}</span>!
           Kolu çekerek şansını dene.
+        </p>
+        <p className="text-white text-lg mt-2">
+          Kalan hakkınız: <span className="font-bold text-yellow-400">{spinsRemaining}</span>
         </p>
         {error && (
           <div className="mt-6 bg-red-900/80 text-white p-4 rounded-lg border-2 border-red-600 shadow-lg">
