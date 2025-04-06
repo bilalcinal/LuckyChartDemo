@@ -37,7 +37,6 @@ export default function AdminPage() {
     { href: '/admin/dashboard', label: 'Gösterge Paneli', icon: '📊' },
     { href: '/admin/wheel-items', label: 'Çark Öğeleri', icon: '🎡' },
     { href: '/admin/rewards', label: 'Ödüller', icon: '🎁' },
-    { href: '/admin/sms', label: 'SMS Zamanlamaları', icon: '📱' },
   ];
 
   return (
