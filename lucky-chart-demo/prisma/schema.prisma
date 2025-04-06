@@ -16,6 +16,7 @@ datasource db {
 // Kullanıcı modeli
 model User {
   id             String     @id @default(uuid())
+  email          String?    @unique // Opsiyonel email alanı eklendi
   phone          String     @unique
   lastLogin      DateTime   @default(now())
   createdAt      DateTime   @default(now())
@@ -75,11 +76,13 @@ model Admin {
 // OTP model for SMS verification
 model OTP {
   id        String   @id @default(uuid())
-  phone     String
+  phone     String?
+  email     String?  // Email alanı eklendi
   code      String
   createdAt DateTime @default(now())
   expiresAt DateTime
   verified  Boolean  @default(false)
 
   @@index([phone])
+  @@index([email])
 }
