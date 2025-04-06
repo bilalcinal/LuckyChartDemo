@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
+
+const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'lucky-chart-secret-key';
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,11 +62,69 @@ export async function POST(req: NextRequest) {
             : null;
         }
         
+        // JWT token oluştur
+        if (user) {
+          console.log("Kullanıcı bilgileri:", {
+            id: user.id,
+            email: user.email,
+            phone: user.phone,
+            spinsRemaining: user.spinsRemaining || 1
+          });
+          
+          const token = createUserToken(user);
+          const refreshToken = createRefreshToken(user);
+          
+          console.log("Token oluşturuldu:", { 
+            userId: user.id,
+            token: token.substring(0, 15) + "..." // Güvenlik için token'ın tamamını gösterme
+          });
+          
+          // Cookie'leri response ile gönder
+          const response = NextResponse.json({
+            success: true,
+            userId: user?.id,
+            email: email,
+            phone: phone,
+            isLoggedIn: true,
+            accessToken: token,
+            refreshToken: refreshToken,
+            message: 'Email adresi başarıyla doğrulandı'
+          });
+          
+          // Cookieleri response objesine ekle
+          response.cookies.set('lc_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 60 * 60 * 24 * 7,
+            path: '/',
+            sameSite: 'lax'
+          });
+          
+          response.cookies.set('lc_refresh_token', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 60 * 60 * 24 * 30,
+            path: '/',
+            sameSite: 'lax'
+          });
+          
+          response.cookies.set('lc_user_id', user.id, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 60 * 60 * 24 * 30,
+            path: '/',
+            sameSite: 'lax'
+          });
+          
+          return response;
+        }
+        
         return NextResponse.json({
           success: true,
           userId: user?.id,
           email: email,
           phone: phone,
+          isLoggedIn: true,
           message: 'Email adresi başarıyla doğrulandı'
         });
       } catch (error) {
@@ -118,6 +180,8 @@ export async function POST(req: NextRequest) {
       // Kullanıcı yoksa oluştur
       let user = existingUser;
       if (!existingUser) {
+        console.log("Yeni kullanıcı oluşturuluyor:", { email, phone });
+        
         // SQL ile kullanıcı oluştur
         await prisma.$executeRawUnsafe(
           `INSERT INTO User (id, phone, email, spinsRemaining, lastLogin, createdAt, updatedAt, isActive)
@@ -135,6 +199,71 @@ export async function POST(req: NextRequest) {
         user = Array.isArray(newUserQuery) && newUserQuery.length > 0 
           ? newUserQuery[0] 
           : null;
+        
+        console.log("Yeni kullanıcı oluşturuldu:", user);
+      }
+      
+      // Son giriş zamanını güncelle
+      if (user) {
+        await prisma.$executeRawUnsafe(
+          `UPDATE User SET lastLogin = NOW() WHERE id = ?`,
+          user.id
+        );
+        
+        console.log("Kullanıcı bilgileri:", {
+          id: user.id,
+          email: user.email,
+          phone: user.phone,
+          spinsRemaining: user.spinsRemaining || 1
+        });
+        
+        // JWT token oluştur
+        const token = createUserToken(user);
+        const refreshToken = createRefreshToken(user);
+        
+        console.log("Token oluşturuldu:", { 
+          userId: user.id,
+          token: token.substring(0, 15) + "..." // Güvenlik için token'ın tamamını gösterme
+        });
+        
+        // Cookie'leri response ile gönder
+        const response = NextResponse.json({
+          success: true,
+          userId: user?.id,
+          email: email,
+          phone: phone,
+          isLoggedIn: true,
+          accessToken: token,
+          refreshToken: refreshToken,
+          message: 'Email adresi başarıyla doğrulandı'
+        });
+        
+        // Cookieleri response objesine ekle
+        response.cookies.set('lc_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 60 * 60 * 24 * 7,
+          path: '/',
+          sameSite: 'lax'
+        });
+        
+        response.cookies.set('lc_refresh_token', refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 60 * 60 * 24 * 30,
+          path: '/',
+          sameSite: 'lax'
+        });
+        
+        response.cookies.set('lc_user_id', user.id, {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 60 * 60 * 24 * 30,
+          path: '/',
+          sameSite: 'lax'
+        });
+        
+        return response;
       }
       
       return NextResponse.json({
@@ -142,6 +271,7 @@ export async function POST(req: NextRequest) {
         userId: user?.id,
         email: email,
         phone: phone,
+        isLoggedIn: true,
         message: 'Email adresi başarıyla doğrulandı'
       });
     } catch (error) {
@@ -158,4 +288,34 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Kullanıcı için JWT token oluştur
+function createUserToken(user: any) {
+  const tokenData = {
+    userId: user.id,
+    email: user.email,
+    phone: user.phone,
+    spinsRemaining: user.spinsRemaining || 1,
+    role: 'USER'
+  };
+  console.log("Token içeriği:", tokenData);
+  
+  return jwt.sign(
+    tokenData,
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+}
+
+// Refresh token oluştur
+function createRefreshToken(user: any) {
+  return jwt.sign(
+    {
+      userId: user.id,
+      tokenType: 'refresh'
+    },
+    JWT_SECRET,
+    { expiresIn: '30d' }
+  );
 } 

@@ -147,7 +147,7 @@ export const authOptions: AuthOptions = {
     },
   },
   pages: {
-    signIn: '/qr', // QR kodu okutma sayfası (normal kullanıcılar için)
+    signIn: '/', // QR kodu okutma sayfası (normal kullanıcılar için)
   },
   session: {
     strategy: 'jwt',

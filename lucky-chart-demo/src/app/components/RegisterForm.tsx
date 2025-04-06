@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 export default function RegisterForm() {
   const [step, setStep] = useState(1);
@@ -9,8 +10,24 @@ export default function RegisterForm() {
   const [tempCode, setTempCode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
   
   const router = useRouter();
+  
+  // Sayfa yüklendiğinde ve refresh token varsa kontrol et
+  useEffect(() => {
+    // Token kontrolü
+    const authToken = Cookies.get('lc_token');
+    const refreshToken = Cookies.get('lc_refresh_token');
+    const userId = Cookies.get('lc_user_id');
+    
+    if (userId && (authToken || refreshToken)) {
+      // Oturum zaten açık, doğrudan çark sayfasına yönlendir
+      router.push('/wheel');
+    } else {
+      setIsChecking(false);
+    }
+  }, [router]);
   
   // Email doğrulama kodu gönderme
   const handleSendVerificationCode = async (e: React.FormEvent) => {
@@ -101,6 +118,20 @@ export default function RegisterForm() {
     const phoneNumber = value.replace(/[^\d]/g, '');
     return phoneNumber;
   };
+  
+  // Yükleniyor durumu
+  if (isChecking) {
+    return (
+      <div className="w-full max-w-lg mx-auto">
+        <div className="bg-black rounded-xl shadow-2xl p-6 sm:p-8 border border-gray-800 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-white text-lg">Oturum kontrol ediliyor...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="w-full max-w-lg mx-auto">

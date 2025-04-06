@@ -53,46 +53,141 @@ export default function JackpotPage() {
   // Oturum kontrolü
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/qr');
+      // NextAuth oturumu yoksa token kontrolü yap
+      checkTokenValidity();
     }
   }, [status, router]);
   
-  // Ödül öğelerini ve mevcut ödülleri getir
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const itemsResponse = await fetch('/api/admin/wheel-items');
-        if (!itemsResponse.ok) {
-          throw new Error('Ödül öğeleri getirilemedi');
+  // Token geçerliliğini kontrol eder ve gerekirse yeniler
+  const checkTokenValidity = async () => {
+    try {
+      // Tarayıcıda çalıştığını kontrol et
+      if (typeof window === 'undefined') return;
+      
+      // Cookie'den userId al
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return undefined;
+      };
+      
+      // Önce localStorage'dan token ve userId kontrol et
+      const storedToken = localStorage.getItem('lc_token');
+      const storedRefreshToken = localStorage.getItem('lc_refresh_token');
+      const storedUserId = localStorage.getItem('lc_user_id');
+      
+      // LocalStorage'da token yoksa cookie'den bak
+      const cookieUserId = getCookie('lc_user_id');
+      
+      const userId = storedUserId || cookieUserId;
+      
+      if (!userId) {
+        console.log('Kullanıcı ID bulunamadı, ana sayfaya yönlendiriliyor');
+        router.push('/');
+        return;
+      }
+      
+      console.log('Token geçerliliği kontrol ediliyor, userId:', userId);
+      
+      // Token geçerliliğini kontrol etmek için wheel/rewards API'sini kullan
+      const response = await fetch('/api/wheel/rewards', {
+        headers: storedToken ? {
+          'Authorization': `Bearer ${storedToken}`
+        } : {}
+      });
+      
+      if (response.ok) {
+        console.log('Token geçerli, sayfa erişimi izin veriliyor');
+        return; // Token geçerli
+      }
+      
+      console.log('Token geçerli değil, yenileme deneniyor...');
+      
+      // Token yenileme isteği gönder
+      const refreshResponse = await fetch('/api/refresh-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
         }
-        const itemsData = await itemsResponse.json();
-        const activeItems = itemsData.filter((item: WheelItem & { isActive: boolean }) => item.isActive);
-        if (!activeItems.length) {
-          setError('Aktif ödül öğesi bulunamadı');
+      });
+      
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json();
+        console.log('Token başarıyla yenilendi');
+        
+        // Yeni tokenları localStorage'a kaydet
+        if (refreshData.accessToken && refreshData.refreshToken) {
+          localStorage.setItem('lc_token', refreshData.accessToken);
+          localStorage.setItem('lc_refresh_token', refreshData.refreshToken);
+          localStorage.setItem('lc_user_id', refreshData.userId);
+          
+          console.log('Yeni token localStorage\'a kaydedildi');
+          
+          // Ödül verilerini tekrar yükle
+          fetchRewardsData();
           return;
         }
-        setRewardItems(activeItems);
-        
-        const rewardsResponse = await fetch('/api/wheel/rewards');
-        if (rewardsResponse.ok) {
-          const rewardsData = await rewardsResponse.json();
-          if (rewardsData.rewards && rewardsData.rewards.length > 0) {
-            const latestReward = rewardsData.rewards.find((r: RewardDetails) => 
-              new Date(r.expiresAt) > new Date()
-            );
-            if (latestReward) {
-              setExistingReward(latestReward);
-            }
+      }
+      
+      // Token yenilenemedi veya başka bir hata oluştu
+      console.log('Oturum doğrulanamadı, ana sayfaya yönlendiriliyor');
+      // LocalStorage'daki token bilgilerini temizle
+      localStorage.removeItem('lc_token');
+      localStorage.removeItem('lc_refresh_token');
+      localStorage.removeItem('lc_user_id');
+      
+      router.push('/');
+      
+    } catch (error) {
+      console.error('Token kontrolü sırasında hata:', error);
+      // LocalStorage'daki token bilgilerini temizle
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('lc_token');
+        localStorage.removeItem('lc_refresh_token');
+        localStorage.removeItem('lc_user_id');
+      }
+      router.push('/');
+    }
+  };
+  
+  // Ödül verilerini getir
+  const fetchRewardsData = async () => {
+    try {
+      const itemsResponse = await fetch('/api/admin/wheel-items');
+      if (!itemsResponse.ok) {
+        throw new Error('Ödül öğeleri getirilemedi');
+      }
+      const itemsData = await itemsResponse.json();
+      const activeItems = itemsData.filter((item: WheelItem & { isActive: boolean }) => item.isActive);
+      if (!activeItems.length) {
+        setError('Aktif ödül öğesi bulunamadı');
+        return;
+      }
+      setRewardItems(activeItems);
+      
+      const rewardsResponse = await fetch('/api/wheel/rewards');
+      if (rewardsResponse.ok) {
+        const rewardsData = await rewardsResponse.json();
+        if (rewardsData.rewards && rewardsData.rewards.length > 0) {
+          const latestReward = rewardsData.rewards.find((r: RewardDetails) => 
+            new Date(r.expiresAt) > new Date()
+          );
+          if (latestReward) {
+            setExistingReward(latestReward);
           }
         }
-      } catch (error) {
-        console.error('Veri getirme hatası:', error);
-        setError('Veriler yüklenirken bir hata oluştu');
       }
-    };
-    
-    if (status === 'authenticated') {
-      fetchData();
+    } catch (error) {
+      console.error('Veri getirme hatası:', error);
+      setError('Veriler yüklenirken bir hata oluştu');
+    }
+  };
+  
+  // Ödül öğelerini ve mevcut ödülleri getir
+  useEffect(() => {
+    if (status === 'authenticated' || document.cookie.includes('lc_user_id')) {
+      fetchRewardsData();
     }
   }, [status]);
   
@@ -104,32 +199,71 @@ export default function JackpotPage() {
     setWinnerIndex(-1);
     
     try {
+      // Token kontrolü
+      const authToken = localStorage.getItem('lc_token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      };
+      
+      // Eğer localStorage'da token varsa header'a ekle
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+      
+      // API isteği
       const response = await fetch('/api/wheel/spin', {
         method: 'POST',
+        headers
       });
+      
+      // Hata durumunda
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('API hatası:', errorData);
         throw new Error(errorData.error || 'Çevirme hatası');
       }
+      
+      // Başarılı cevap
       const data = await response.json();
+      console.log('Çevirme başarılı, veri:', data);
+      
+      if (!data.reward || !data.reward.item) {
+        throw new Error('Ödül verisi eksik veya hatalı');
+      }
+      
       const winIndex = rewardItems.findIndex(item => item.id === data.reward.item.id);
       if (winIndex === -1) {
+        console.error('Kazanılan ödül listede bulunamadı:', data.reward.item.id);
+        console.log('Mevcut ödül listesi:', rewardItems.map(i => i.id));
         throw new Error('Kazanılan ödül listede bulunamadı');
       }
+      
       setReward(data.reward);
       startSlotAnimation(winIndex);
       
     } catch (error: any) {
       console.error('Çevirme hatası:', error);
+      
       if (error.message.includes('Bugün için çevirme hakkınız')) {
         setError('Bugünlük hakkınız bitti, lütfen yarın tekrar deneyiniz.');
         if (existingReward) {
           setReward(existingReward);
           setShowReward(true);
         }
+      } else if (error.message.includes('Oturum') || error.message.includes('giriş')) {
+        setError('Lütfen tekrar giriş yapın ve sayfayı yenileyin');
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
+      } else if (error.message.includes('Kullanıcı bulunamadı')) {
+        setError('Hesap bilgileriniz bulunamadı. Lütfen tekrar giriş yapın.');
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
       } else {
         setError(error.message || 'Çevirme sırasında bir hata oluştu');
       }
+      
       setSpinning(false);
     }
   };

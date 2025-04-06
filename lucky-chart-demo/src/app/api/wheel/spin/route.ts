@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { v4 as uuidv4 } from 'uuid';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'lucky-chart-secret-key';
 
 // 5-6 haneli benzersiz kod üretme fonksiyonu
 function generateUniqueCode(): string {
@@ -29,24 +32,95 @@ function getNextDayMidnight() {
 
 export async function POST(req: NextRequest) {
   try {
-    // Kullanıcı oturumunu kontrol et
-    const session = await getServerSession(authOptions);
+    console.log("------ SPIN API ÇAĞRILDI -------");
     
-    if (!session || !session.user) {
+    // Önce NextAuth oturumunu kontrol et
+    const session = await getServerSession(authOptions);
+    let userId = session?.user?.id;
+    
+    console.log("Session bilgisi:", session ? { userId: session.user?.id } : "Session yok");
+    
+    // NextAuth oturumu yoksa, JWT token kontrolü yap
+    if (!userId) {
+      // 1. Request'ten cookie'leri al
+      const authToken = req.cookies.get('lc_token')?.value;
+      const refreshToken = req.cookies.get('lc_refresh_token')?.value;
+      const cookieUserId = req.cookies.get('lc_user_id')?.value;
+      
+      // 2. Authorization header'dan Bearer token'ı al
+      let headerToken: string | undefined;
+      const authHeader = req.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        headerToken = authHeader.substring(7);
+        console.log("Authorization header token bulundu");
+      }
+      
+      // Kullanılabilir token belirle (öncelik header token'da)
+      const tokenToUse = headerToken || authToken;
+      
+      console.log("Token bilgileri:", { 
+        headerToken: headerToken ? "var" : "yok",
+        cookieToken: authToken ? "var" : "yok", 
+        refreshToken: refreshToken ? "var" : "yok",
+        cookieUserId
+      });
+      
+      if (tokenToUse) {
+        try {
+          // JWT token'ı doğrula
+          const decoded = jwt.verify(tokenToUse, JWT_SECRET) as { userId: string };
+          userId = decoded.userId;
+          console.log("Token doğrulandı, userId:", userId);
+        } catch (tokenError) {
+          console.error("Token doğrulama hatası:", tokenError);
+          
+          // Token geçersizse, refresh token'ı kontrol et
+          if (refreshToken && cookieUserId) {
+            try {
+              const refreshDecoded = jwt.verify(refreshToken, JWT_SECRET) as { userId: string, tokenType: string };
+              if (refreshDecoded.tokenType === 'refresh' && refreshDecoded.userId === cookieUserId) {
+                userId = cookieUserId;
+                console.log("Refresh token ile doğrulandı, userId:", userId);
+              }
+            } catch (refreshError) {
+              console.error('Refresh token hatası:', refreshError);
+            }
+          }
+        }
+      }
+    }
+    
+    // Kullanıcı ID'si yoksa yetkilendirme hatası döndür
+    if (!userId) {
+      console.log("Kullanıcı ID'si bulunamadı, yetkilendirme hatası");
       return NextResponse.json(
         { error: 'Oturum açmanız gerekiyor' },
         { status: 401 }
       );
     }
     
-    const userId = session.user.id;
+    console.log("Kullanıcı bilgisi alınıyor, userId:", userId);
     
     // Kullanıcıyı veritabanından getir
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
     
+    console.log("Veritabanı sorgusu sonucu:", user ? "Kullanıcı bulundu" : "Kullanıcı bulunamadı");
+    
     if (!user) {
+      console.log("Kullanıcı bulunamadı, userId:", userId);
+      
+      // Debug için UUID'yi kontrol et
+      try {
+        const allUsers = await prisma.user.findMany({
+          take: 5
+        });
+        console.log("Veritabanındaki ilk 5 kullanıcı:", allUsers.map(u => ({ id: u.id, phone: u.phone })));
+      } catch (err) {
+        console.error("Tüm kullanıcıları getirme hatası:", err);
+      }
+      
       return NextResponse.json(
         { error: 'Kullanıcı bulunamadı' },
         { status: 404 }
@@ -106,6 +180,13 @@ export async function POST(req: NextRequest) {
     const uniqueCode = generateUniqueCode();
     const expiresAt = getNextDayMidnight();
     
+    console.log("Ödül oluşturuluyor:", {
+      code: uniqueCode,
+      userId: user.id,
+      wheelItemId: selectedItem.id,
+      expires: expiresAt
+    });
+    
     // Ödülü kayet
     const reward = await prisma.reward.create({
       data: {
@@ -131,6 +212,8 @@ export async function POST(req: NextRequest) {
         lastSpinDate: new Date(),
       },
     });
+    
+    console.log("Ödül kaydedildi ve kullanıcı güncellendi");
     
     // Yanıtta ödül ve ilgili öğenin bilgilerini gönder
     return NextResponse.json({ 
