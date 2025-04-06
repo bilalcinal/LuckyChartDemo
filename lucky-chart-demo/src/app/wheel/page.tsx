@@ -37,6 +37,8 @@ export default function JackpotPage() {
   const [winnerIndex, setWinnerIndex] = useState(-1);
   const [latestPrizeShown, setLatestPrizeShown] = useState(false);
   const [spinsRemaining, setSpinsRemaining] = useState(0);
+  const [allRewards, setAllRewards] = useState<RewardDetails[]>([]);
+  const [latestReward, setLatestReward] = useState<RewardDetails | null>(null);
   
   // Animasyon için slotRef ve animationRef
   const slotRef = useRef<HTMLDivElement>(null);
@@ -86,11 +88,13 @@ export default function JackpotPage() {
         if (rewardsResponse.ok) {
           const rewardsData = await rewardsResponse.json();
           if (rewardsData.rewards && rewardsData.rewards.length > 0) {
-            const latestReward = rewardsData.rewards.find((r: RewardDetails) => 
-              new Date(r.expiresAt) > new Date()
-            );
-            if (latestReward) {
-              setExistingReward(latestReward);
+            // Tüm ödülleri al
+            setAllRewards(rewardsData.rewards);
+            
+            // En son alınan ödülü al
+            if (rewardsData.latestReward) {
+              setLatestReward(rewardsData.latestReward);
+              setExistingReward(rewardsData.latestReward);
             }
           }
         }
@@ -112,8 +116,8 @@ export default function JackpotPage() {
     if (spinsRemaining <= 0) {
       setError('Bugün için çevirme hakkınız kalmadı. Yarın tekrar deneyiniz.');
       // Son kazanılan ödülü göster (varsa)
-      if (existingReward) {
-        setReward(existingReward);
+      if (latestReward) {
+        setReward(latestReward);
         setShowReward(true);
       }
       return;
@@ -140,6 +144,11 @@ export default function JackpotPage() {
       // Çevirme hakkını güncelle
       setSpinsRemaining(prevSpins => Math.max(0, prevSpins - 1));
       
+      // Yeni ödülü tüm ödüller listesine ekle ve en son ödül olarak ayarla
+      setAllRewards(prev => [data.reward, ...prev]);
+      setLatestReward(data.reward);
+      setExistingReward(data.reward);
+      
       startSlotAnimation(winIndex);
       
     } catch (error: any) {
@@ -147,8 +156,8 @@ export default function JackpotPage() {
       if (error.message.includes('Bugün için çevirme hakkınız')) {
         setError('Bugünlük hakkınız bitti, lütfen yarın tekrar deneyiniz.');
         setLatestPrizeShown(true);
-        if (existingReward) {
-          setReward(existingReward);
+        if (latestReward) {
+          setReward(latestReward);
           setShowReward(true);
         }
       } else {
@@ -272,6 +281,7 @@ export default function JackpotPage() {
         <p className="text-white text-lg mt-2">
           Kalan hakkınız: <span className="font-bold text-yellow-400">{spinsRemaining}</span>
         </p>
+        
         {error && (
           <div className="mt-6 bg-red-900/80 text-white p-4 rounded-lg border-2 border-red-600 shadow-lg">
             <p className="font-bold">{error}</p>
@@ -537,6 +547,7 @@ export default function JackpotPage() {
         </p>
       </div>
       
+      {/* Ödül popup'ı - Çark durduğunda gösterilir */}
       {showReward && reward && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div 
@@ -559,7 +570,7 @@ export default function JackpotPage() {
             </h2>
             
             <div className="bg-gray-800/80 p-5 rounded-lg mb-6 shadow-inner">
-              <p className="text-white mb-2">Kazandığınız ödül:</p>
+              <h3 className="text-white text-lg font-semibold mb-2">Son Kazandığınız Ödül:</h3>
               <p className="text-2xl font-bold text-yellow-300 mb-5"
                  style={{ textShadow: '0 0 5px rgba(251, 191, 36, 0.5)' }}>
                 {reward.item.title}

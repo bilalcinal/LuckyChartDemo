@@ -17,10 +17,17 @@ export async function GET(req: NextRequest) {
     
     const userId = session.user.id;
     
-    // Kullanıcının ödüllerini getir
+    // Şu anki tarih
+    const now = new Date();
+    
+    // Kullanıcının ödüllerini getir - sadece kullanılmamış ve süresi geçmemiş olanlar
     const rewards = await prisma.reward.findMany({
       where: { 
         userId: userId,
+        isUsed: false,
+        expiresAt: {
+          gte: now, // Son kullanma tarihi şu andan büyük veya eşit olanlar
+        }
       },
       include: {
         wheelItem: true,
@@ -41,11 +48,17 @@ export async function GET(req: NextRequest) {
         color: reward.wheelItem.color,
       },
       expiresAt: reward.expiresAt,
+      createdAt: reward.createdAt,
+      isUsed: reward.isUsed,
     }));
+    
+    // En son alınan ödülü (aktivasyon tarihine göre)
+    const latestReward = formattedRewards.length > 0 ? formattedRewards[0] : null;
     
     return NextResponse.json({ 
       success: true,
-      rewards: formattedRewards
+      rewards: formattedRewards,
+      latestReward
     });
     
   } catch (error) {

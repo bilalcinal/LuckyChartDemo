@@ -62,15 +62,16 @@ export async function POST(req: NextRequest) {
     }
     
     // Kullanıcının bugün daha önce çevirip çevirmediğini kontrol et
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Bu kontrolü kaldırıyoruz - spinsRemaining > 0 olduğu sürece çevirebilir
+    // const today = new Date();
+    // today.setHours(0, 0, 0, 0);
     
-    if (user.lastSpinDate && new Date(user.lastSpinDate) >= today) {
-      return NextResponse.json(
-        { error: 'Bugün için çevirme hakkınızı kullandınız' },
-        { status: 403 }
-      );
-    }
+    // if (user.lastSpinDate && new Date(user.lastSpinDate) >= today) {
+    //   return NextResponse.json(
+    //     { error: 'Bugün için çevirme hakkınızı kullandınız' },
+    //     { status: 403 }
+    //   );
+    // }
     
     // Aktif çark öğelerini getir
     const wheelItems = await prisma.wheelItem.findMany({
