@@ -74,3 +74,15 @@ model Admin {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// Çalışanlar
+model Employee {
+  id         String   @id @default(uuid())
+  fullName   String
+  phone      String
+  email      String?
+  position   String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

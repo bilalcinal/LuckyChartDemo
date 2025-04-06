@@ -11,4 +11,16 @@ export const prisma =
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma; 
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+// Employee model tipini manuel olarak ekleyelim
+export type Employee = {
+  id: string;
+  fullName: string;
+  phone: string;
+  email: string | null;
+  position: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}; 
