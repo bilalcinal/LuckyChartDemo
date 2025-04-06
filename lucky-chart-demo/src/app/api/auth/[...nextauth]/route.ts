@@ -151,8 +151,12 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 60 * 60 * 24, // 24 saat (saniye olarak)
-    updateAge: 20, // 20 saniye sonra refresh token
+    maxAge: 60 * 60 * 24 * 30, // 30 gün (saniye olarak) - 2592000 saniye
+    updateAge: 60 * 60 * 24, // 1 gün sonra oturum yenileme
+  },
+  // JWT ayarları
+  jwt: {
+    maxAge: 60 * 60 * 24 * 30, // 30 gün (saniye olarak)
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

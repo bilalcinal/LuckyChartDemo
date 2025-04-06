@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 
 export default function QRPage() {
@@ -17,6 +17,14 @@ export default function QRPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/wheel';
+  const { data: session, status } = useSession();
+
+  // Session kontrolü ile otomatik yönlendirme
+  useEffect(() => {
+    if (status === 'authenticated' && session) {
+      router.push(callbackUrl);
+    }
+  }, [session, status, router, callbackUrl]);
 
   // Doğrulama kodu girişi için 6 ayrı input kutusu
   const [codeDigits, setCodeDigits] = useState(['', '', '', '', '', '']);
@@ -47,6 +55,18 @@ export default function QRPage() {
       document.getElementById(`code-${index - 1}`)?.focus();
     }
   };
+
+  // Sayfa yüklenirken gösterilecek yükleniyor göstergesi
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 mb-4 border-4 border-t-yellow-500 border-r-yellow-500 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+          <p className="text-yellow-500">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,6 +202,11 @@ export default function QRPage() {
       setIsLoading(false);
     }
   };
+
+  // Kullanıcı session varsa sayfayı gösterme
+  if (status === 'authenticated') {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center w-full px-4 py-6">
