@@ -97,7 +97,9 @@ export default function AdminWheelItems() {
       // Olasılık değerini yüzdelik değerden ondalık değere dönüştür (örn: 5 -> 0.05)
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
-        setFormData(prev => ({ ...prev, [name]: numValue / 100 }));
+        // 0 ile 100 arasında sınırla
+        const clampedValue = Math.min(100, Math.max(0.01, numValue));
+        setFormData(prev => ({ ...prev, [name]: clampedValue / 100 }));
       }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -109,7 +111,7 @@ export default function AdminWheelItems() {
       title: '',
       description: '',
       color: '#ff8f43',
-      probability: 1.0,
+      probability: 0.01, // %1 olarak başlatalım
       isActive: true,
     });
     setEditingId(null);
@@ -345,11 +347,11 @@ export default function AdminWheelItems() {
         <div className="flex justify-between mb-6">
           <div>
             <div className="bg-gray-900 p-4 rounded-lg mb-4">
-              <h2 className="text-lg text-yellow-400 mb-2">Olasılık Bilgisi:</h2>
+              <h2 className="text-lg text-yellow-400 mb-2">Çark Olasılık Bilgisi:</h2>
               <p>Toplam Atanan Olasılık: <span className="text-yellow-400 font-bold">%{(totalProbability * 100).toFixed(2)}</span></p>
               <p>Geri Kalan Olasılık: <span className="text-yellow-400 font-bold">%{((1 - totalProbability) * 100).toFixed(2)}</span></p>
               <p className="text-sm text-gray-400 mt-2">
-                Not: Geri kalan olasılık "Yarın Tekrar Deneyiniz" öğesine atanacaktır.
+                Not: Geri kalan olasılık "Yarın Tekrar Deneyiniz" öğesine atanacaktır. Toplam olasılık %100 olmalıdır.
               </p>
             </div>
             
@@ -570,7 +572,7 @@ export default function AdminWheelItems() {
                         <div className="text-sm text-gray-300">{item.description || '-'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-300">{item.probability}</div>
+                        <div className="text-sm text-gray-300">%{(item.probability * 100).toFixed(2)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
