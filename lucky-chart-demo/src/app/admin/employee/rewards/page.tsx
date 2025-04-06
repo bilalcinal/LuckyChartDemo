@@ -19,6 +19,8 @@ export default function EmployeeRewardsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
+  const [searchCode, setSearchCode] = useState('');
+  const [filteredRewards, setFilteredRewards] = useState<Reward[]>([]);
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -43,6 +45,7 @@ export default function EmployeeRewardsPage() {
 
         const data = await response.json();
         setRewards(data);
+        setFilteredRewards(data); // Başlangıçta tüm ödülleri göster
       } catch (error) {
         console.error('Ödüller yüklenirken hata:', error);
         setError('Ödüller yüklenirken bir hata oluştu');
@@ -55,6 +58,35 @@ export default function EmployeeRewardsPage() {
       fetchRewards();
     }
   }, [session, status]);
+
+  // Ödül kodu ile arama yap
+  const handleSearch = () => {
+    if (!searchCode.trim()) {
+      setFilteredRewards(rewards); // Arama kutusu boş ise tüm ödülleri göster
+      return;
+    }
+    
+    // Arama yaparken büyük/küçük harf duyarlılığını kaldır
+    const searchTerm = searchCode.trim().toUpperCase();
+    const filtered = rewards.filter(reward => 
+      reward.code.toUpperCase().includes(searchTerm)
+    );
+    
+    setFilteredRewards(filtered);
+  };
+
+  // Enter tuşuna basıldığında arama yap
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  // Arama sıfırla
+  const resetSearch = () => {
+    setSearchCode('');
+    setFilteredRewards(rewards);
+  };
 
   // Ödül durumunu güncelle
   const updateRewardStatus = async (id: string, isUsed: boolean) => {
@@ -143,6 +175,44 @@ export default function EmployeeRewardsPage() {
           </button>
         </div>
 
+        {/* Ödül Kodu Arama Bölümü */}
+        <div className="mb-6 bg-gray-900 p-4 rounded-lg">
+          <h2 className="text-xl font-bold text-yellow-400 mb-3">Ödül Kodu Arama</h2>
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex-1">
+              <input
+                type="text"
+                value={searchCode}
+                onChange={(e) => setSearchCode(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ödül kodu girin..."
+                className="w-full bg-gray-800 text-white border border-gray-700 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSearch}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-6 rounded-md"
+              >
+                Ara
+              </button>
+              {searchCode && (
+                <button
+                  onClick={resetSearch}
+                  className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-md"
+                >
+                  Sıfırla
+                </button>
+              )}
+            </div>
+          </div>
+          {filteredRewards.length === 0 && searchCode && (
+            <div className="mt-4 text-yellow-500">
+              &quot;{searchCode}&quot; koduna uygun ödül bulunamadı.
+            </div>
+          )}
+        </div>
+
         {rewards.length === 0 ? (
           <div className="text-center py-10 bg-gray-900 rounded-lg">
             <p className="text-xl">Kayıtlı ödül bulunmamaktadır.</p>
@@ -173,7 +243,7 @@ export default function EmployeeRewardsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
-                {rewards.map((reward) => (
+                {filteredRewards.map((reward) => (
                   <tr key={reward.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-lg font-bold text-yellow-400">{reward.code}</div>
