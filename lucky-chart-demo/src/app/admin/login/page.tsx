@@ -12,10 +12,14 @@ export default function AdminLogin() {
   const router = useRouter();
   const { status, data: session } = useSession();
   
-  // Kullanıcı zaten giriş yapmışsa ve admin rolü varsa yönlendir
+  // Kullanıcı zaten giriş yapmışsa, rolüne göre yönlendir
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
-      router.push('/admin');
+    if (status === 'authenticated') {
+      if (session?.user?.role === 'ADMIN') {
+        router.push('/admin');
+      } else if (session?.user?.role === 'EMPLOYEE') {
+        router.push('/admin/employee/rewards');
+      }
     }
   }, [status, session, router]);
 
@@ -38,10 +42,17 @@ export default function AdminLogin() {
         return;
       }
 
-      // Başarılı giriş, admin paneline yönlendir
-      router.push('/admin');
+      // Başarılı giriş, kullanıcı rolüne göre yönlendir
+      if (session?.user?.role === 'ADMIN') {
+        router.push('/admin');
+      } else if (session?.user?.role === 'EMPLOYEE') {
+        router.push('/admin/employee/rewards');
+      } else {
+        // Oturum henüz güncellenmediyse sayfayı yenile
+        window.location.reload();
+      }
     } catch (error) {
-      console.error('Admin giriş hatası:', error);
+      console.error('Giriş hatası:', error);
       setError('Bir sorun oluştu. Lütfen tekrar deneyin.');
     } finally {
       setIsLoading(false);
@@ -62,7 +73,7 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="bg-gray-900 p-8 rounded-lg shadow-lg max-w-md w-full border border-gray-800">
-        <h1 className="text-2xl font-bold text-center mb-6 text-yellow-400">Admin Girişi</h1>
+        <h1 className="text-2xl font-bold text-center mb-6 text-yellow-400">Yönetici Girişi</h1>
         
         {error && (
           <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-4" role="alert">
@@ -99,12 +110,10 @@ export default function AdminLogin() {
             />
           </div>
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-center">
             <button
               type="submit"
-              className={`bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
               disabled={isLoading}
             >
               {isLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}

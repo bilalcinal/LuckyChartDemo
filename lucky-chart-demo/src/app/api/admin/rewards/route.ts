@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     // Oturum kontrolü
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user || session.user.role !== 'ADMIN') {
+    if (!session || !session.user || (session.user.role !== 'ADMIN' && session.user.role !== 'EMPLOYEE')) {
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 

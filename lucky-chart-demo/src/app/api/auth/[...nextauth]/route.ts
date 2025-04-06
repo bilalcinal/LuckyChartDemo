@@ -110,18 +110,38 @@ export const authOptions: AuthOptions = {
           where: { username },
         });
         
-        if (!admin) return null;
-        
-        // Şifre kontrolü
-        const isPasswordValid = await bcrypt.compare(password, admin.password);
-        
-        if (!isPasswordValid) return null;
-        
+        // Admin bulunduysa şifresini kontrol et
+        if (admin) {
+          const isPasswordValid = await bcrypt.compare(password, admin.password);
+          
+          if (isPasswordValid) {
+            return {
+              id: admin.id,
+              phone: 'admin', // Bu alan kullanılmıyor ama tip için gerekli
+              spinsRemaining: 0, // Bu alan kullanılmıyor ama tip için gerekli
+              role: 'ADMIN'
+            } as SansliCarkUser;
+          }
+        }
+
+        // Admin bulunamadıysa veya şifre yanlışsa, çalışan tablosunda kontrol et
+        const employee = await prisma.employee.findUnique({
+          where: { username },
+        });
+
+        if (!employee || !employee.password) return null;
+
+        // Çalışan şifresini kontrol et
+        const isEmployeePasswordValid = await bcrypt.compare(password, employee.password);
+
+        if (!isEmployeePasswordValid) return null;
+
+        // Çalışan kimlik doğrulaması başarılı
         return {
-          id: admin.id,
-          phone: 'admin', // Bu alan kullanılmıyor ama tip için gerekli
+          id: employee.id,
+          phone: employee.phone,
           spinsRemaining: 0, // Bu alan kullanılmıyor ama tip için gerekli
-          role: 'ADMIN'
+          role: 'EMPLOYEE'
         } as SansliCarkUser;
       }
     })
