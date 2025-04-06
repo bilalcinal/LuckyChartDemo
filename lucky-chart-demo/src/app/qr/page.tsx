@@ -7,6 +7,7 @@ import Link from 'next/link';
 
 export default function QRPage() {
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -26,6 +27,21 @@ export default function QRPage() {
         return;
       }
 
+      // Email kontrolü
+      if (!email) {
+        setError('Lütfen e-posta adresinizi girin');
+        setIsLoading(false);
+        return;
+      }
+
+      // Email format kontrolü
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setError('Lütfen geçerli bir e-posta adresi girin');
+        setIsLoading(false);
+        return;
+      }
+
       // Telefon numarası formatlama
       const formattedPhone = phone.startsWith('+90') ? phone : `+90${phone.replace(/\D/g, '')}`;
 
@@ -35,7 +51,10 @@ export default function QRPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ phone: formattedPhone }),
+        body: JSON.stringify({ 
+          phone: formattedPhone,
+          email: email 
+        }),
       });
 
       const registerData = await registerResponse.json();
@@ -79,7 +98,7 @@ export default function QRPage() {
         
         <div className="text-center mb-6">
           <p className="text-gray-300">
-            Çarkı çevirmek için lütfen telefon numaranızı girin:
+            Çarkı çevirmek için lütfen bilgilerinizi girin:
           </p>
         </div>
         
@@ -101,6 +120,21 @@ export default function QRPage() {
               className="shadow appearance-none border border-gray-700 bg-gray-800 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline focus:border-yellow-500"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-gray-300 text-sm font-bold mb-2">
+              E-posta Adresi
+            </label>
+            <input
+              type="email"
+              id="email"
+              placeholder="ornek@mail.com"
+              className="shadow appearance-none border border-gray-700 bg-gray-800 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline focus:border-yellow-500"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
