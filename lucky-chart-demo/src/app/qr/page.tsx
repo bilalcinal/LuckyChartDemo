@@ -212,15 +212,15 @@ export default function QRPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center w-full px-4 py-6">
       <div className="relative w-full max-w-md mx-auto">
         {/* Arka plan efekti */}
-        <div className="absolute inset-0 blur-xl bg-yellow-500 opacity-10 rounded-xl transform -rotate-6"></div>
+        <div className="absolute inset-0 blur-xl bg-yellow-500 opacity-10 rounded-xl transform -rotate-6 pointer-events-none"></div>
         
-        <div className="relative bg-gray-900 text-white p-8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-sm border border-gray-800 overflow-hidden">
-          {/* Decorative Elements */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600"></div>
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-500 rounded-full opacity-10 blur-2xl"></div>
+        <div className="relative bg-gray-900 text-white p-8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-sm border border-gray-800 overflow-hidden z-10">
+          {/* Decorative Elements - pointer-events-none eklenerek bunların input'ları engellememesi sağlanıyor */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600 pointer-events-none"></div>
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-500 rounded-full opacity-10 blur-2xl pointer-events-none"></div>
           
-          <div className="flex flex-col items-center justify-center mb-8">
-            <div className="w-16 h-16 mb-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
+          <div className="flex flex-col items-center justify-center mb-8 relative z-10">
+            <div className="w-16 h-16 mb-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -229,7 +229,8 @@ export default function QRPage() {
             <h2 className="text-lg sm:text-xl text-center text-gray-300 font-light">Şanslı Çark</h2>
           </div>
           
-          <div className={`transition-all duration-500 ease-in-out transform ${step === 'verify' ? 'opacity-0 scale-90 absolute inset-0' : 'opacity-100 scale-100'}`}>
+          {/* Register Form - z-index eklendi */}
+          <div className={`transition-all duration-500 ease-in-out transform relative z-20 ${step === 'verify' ? 'opacity-0 scale-90 hidden' : 'opacity-100 scale-100 block'}`}>
             <div className="text-center mb-6">
               {step === 'register' && (
                 <p className="text-gray-300">
@@ -252,7 +253,7 @@ export default function QRPage() {
             {step === 'register' && (
               <form onSubmit={handleRegister} className="space-y-6">
                 <div className="relative">
-                  <div className={`absolute inset-0 bg-gradient-to-r from-yellow-500 to-yellow-300 opacity-20 blur-md rounded-lg transition-opacity duration-300 ${activeInput === 'phone' ? 'opacity-30' : 'opacity-0'}`}></div>
+                  <div className={`absolute inset-0 bg-gradient-to-r from-yellow-500 to-yellow-300 opacity-20 blur-md rounded-lg transition-opacity duration-300 pointer-events-none ${activeInput === 'phone' ? 'opacity-30' : 'opacity-0'}`}></div>
                   <label htmlFor="phone" className="block text-gray-300 text-sm font-medium mb-2 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -263,7 +264,7 @@ export default function QRPage() {
                     type="tel"
                     id="phone"
                     placeholder="5XX XXX XX XX"
-                    className="shadow appearance-none border border-gray-700 bg-gray-800/70 backdrop-blur-sm rounded-lg w-full py-3 px-4 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent transition-all duration-300"
+                    className="relative z-10 shadow appearance-none border border-gray-700 bg-gray-800/70 backdrop-blur-sm rounded-lg w-full py-3 px-4 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent transition-all duration-300"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     onFocus={() => setActiveInput('phone')}
@@ -273,7 +274,7 @@ export default function QRPage() {
                 </div>
 
                 <div className="relative">
-                  <div className={`absolute inset-0 bg-gradient-to-r from-yellow-500 to-yellow-300 opacity-20 blur-md rounded-lg transition-opacity duration-300 ${activeInput === 'email' ? 'opacity-30' : 'opacity-0'}`}></div>
+                  <div className={`absolute inset-0 bg-gradient-to-r from-yellow-500 to-yellow-300 opacity-20 blur-md rounded-lg transition-opacity duration-300 pointer-events-none ${activeInput === 'email' ? 'opacity-30' : 'opacity-0'}`}></div>
                   <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -284,7 +285,7 @@ export default function QRPage() {
                     type="email"
                     id="email"
                     placeholder="ornek@mail.com"
-                    className="shadow appearance-none border border-gray-700 bg-gray-800/70 backdrop-blur-sm rounded-lg w-full py-3 px-4 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent transition-all duration-300"
+                    className="relative z-10 shadow appearance-none border border-gray-700 bg-gray-800/70 backdrop-blur-sm rounded-lg w-full py-3 px-4 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent transition-all duration-300"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onFocus={() => setActiveInput('email')}
@@ -296,7 +297,7 @@ export default function QRPage() {
                 <div>
                   <button
                     type="submit"
-                    className={`bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 w-full transform transition-all duration-300 hover:scale-[1.02] shadow-lg ${
+                    className={`relative z-10 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 w-full transform transition-all duration-300 hover:scale-[1.02] shadow-lg ${
                       isLoading ? 'opacity-70 pointer-events-none' : ''
                     }`}
                     disabled={isLoading}
@@ -323,7 +324,8 @@ export default function QRPage() {
             )}
           </div>
           
-          <div className={`transition-all duration-500 ease-in-out transform ${step === 'register' ? 'opacity-0 scale-90 absolute inset-0' : 'opacity-100 scale-100'}`}>
+          {/* Verification Form - z-index eklendi */}
+          <div className={`transition-all duration-500 ease-in-out transform relative z-20 ${step === 'register' ? 'opacity-0 scale-90 hidden' : 'opacity-100 scale-100 block'}`}>
             <div className="text-center mb-6">
               {step === 'verify' && (
                 <div>
@@ -365,7 +367,7 @@ export default function QRPage() {
                         value={codeDigits[i]}
                         onChange={(e) => handleCodeChange(i, e.target.value)}
                         onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                        className="w-10 h-14 sm:w-12 sm:h-16 text-center text-xl font-bold bg-gray-800/70 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent text-white transition-all duration-300"
+                        className="relative z-10 w-10 h-14 sm:w-12 sm:h-16 text-center text-xl font-bold bg-gray-800/70 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent text-white transition-all duration-300"
                       />
                     ))}
                   </div>
@@ -374,7 +376,7 @@ export default function QRPage() {
                 <div>
                   <button
                     type="submit"
-                    className={`bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 w-full transform transition-all duration-300 hover:scale-[1.02] shadow-lg ${
+                    className={`relative z-10 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 w-full transform transition-all duration-300 hover:scale-[1.02] shadow-lg ${
                       isLoading ? 'opacity-70 pointer-events-none' : ''
                     }`}
                     disabled={isLoading}
@@ -404,7 +406,7 @@ export default function QRPage() {
                   </p>
                   <button
                     type="button"
-                    className="text-yellow-500 hover:text-yellow-400 text-sm mt-2 font-medium transition-colors duration-300 flex items-center justify-center mx-auto"
+                    className="relative z-10 text-yellow-500 hover:text-yellow-400 text-sm mt-2 font-medium transition-colors duration-300 flex items-center justify-center mx-auto"
                     onClick={() => setStep('register')}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -417,7 +419,7 @@ export default function QRPage() {
             )}
           </div>
           
-          <div className="mt-8 text-center">
+          <div className="mt-8 text-center relative z-10">
             <div className="inline-flex items-center">
               <div className="h-px w-8 bg-gray-700"></div>
               <p className="text-xs text-gray-500 mx-2">KAFE ŞANS</p>
