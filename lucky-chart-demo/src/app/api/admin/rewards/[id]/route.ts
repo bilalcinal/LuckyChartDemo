@@ -1,15 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
+type Params = {
+  params: {
+    id: string;
+  };
+};
+
 // Belirli bir ödülü getirme
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, context: Params) {
   try {
     // Oturum kontrolü
     const session = await getServerSession(authOptions);
@@ -18,7 +21,7 @@ export async function GET(
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
-    const id = params.id;
+    const id = context.params.id;
 
     const reward = await prisma.reward.findUnique({
       where: { id },
@@ -44,10 +47,7 @@ export async function GET(
 }
 
 // Ödülü güncelleme (kullanıldı olarak işaretleme vb.)
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, context: Params) {
   try {
     // Oturum kontrolü
     const session = await getServerSession(authOptions);
@@ -56,7 +56,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
-    const id = params.id;
+    const id = context.params.id;
     const data = await request.json();
 
     // Ödülün varlığını kontrol et
@@ -92,10 +92,7 @@ export async function PUT(
 }
 
 // Ödülü silme
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, context: Params) {
   try {
     // Oturum kontrolü
     const session = await getServerSession(authOptions);
@@ -104,7 +101,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
-    const id = params.id;
+    const id = context.params.id;
 
     // Ödülün varlığını kontrol et
     const existingReward = await prisma.reward.findUnique({

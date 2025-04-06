@@ -32,9 +32,9 @@
     "nodemailer": "^6.10.0",
     "prisma": "^6.5.0",
     "qrcode.react": "^4.2.0",
-    "react": "^19.0.0",
+    "react": "^18.2.0",
     "react-custom-roulette": "^1.4.1",
-    "react-dom": "^19.0.0",
+    "react-dom": "^18.2.0",
     "react-webcam": "^7.2.0",
     "twilio": "^5.5.1",
     "uuid": "^11.1.0"
