@@ -8,16 +8,5 @@
       "path": "/api/cron/send-sms",
       "schedule": "0 12 * * *"
     }
-  ],
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "build": {
-    "env": {
-      "NEXT_TELEMETRY_DISABLED": "1"
-    }
-  }
+  ]
 } 
