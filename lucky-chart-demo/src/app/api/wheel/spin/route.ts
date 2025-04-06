@@ -19,6 +19,14 @@ function generateUniqueCode(): string {
   return code;
 }
 
+// Bir sonraki günün 00:00'ını döndüren yardımcı fonksiyon
+function getNextDayMidnight() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  return tomorrow;
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Kullanıcı oturumunu kontrol et
@@ -96,17 +104,22 @@ export async function POST(req: NextRequest) {
     
     // Benzersiz kod oluştur ve veritabanına kaydet
     const uniqueCode = generateUniqueCode();
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // 24 saat geçerli
+    const expiresAt = getNextDayMidnight();
     
-    // Ödülü kadet
+    // Ödülü kayet
     const reward = await prisma.reward.create({
       data: {
-        id: uuidv4(),
         code: uniqueCode,
         userId: user.id,
         wheelItemId: selectedItem.id,
         expiresAt,
+      }
+    });
+    
+    // Ödül için wheel item bilgilerini al
+    const wheelItem = await prisma.wheelItem.findUnique({
+      where: {
+        id: selectedItem.id
       }
     });
     
@@ -119,19 +132,12 @@ export async function POST(req: NextRequest) {
       },
     });
     
-    // Yanıt döndür
-    return NextResponse.json({
-      success: true,
+    // Yanıtta ödül ve ilgili öğenin bilgilerini gönder
+    return NextResponse.json({ 
+      success: true, 
       reward: {
-        id: reward.id,
-        code: reward.code,
-        item: {
-          id: selectedItem.id,
-          title: selectedItem.title,
-          description: selectedItem.description,
-          color: selectedItem.color,
-        },
-        expiresAt: reward.expiresAt,
+        ...reward,
+        item: wheelItem
       }
     });
     

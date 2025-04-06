@@ -253,13 +253,7 @@ export default function JackpotPage() {
                 <p className="text-sm">Mevcut kodunuz:</p> 
                 <span className="font-bold text-xl text-yellow-300 block my-1">{existingReward.code}</span>
                 <span className="text-xs text-gray-300 block">
-                  {new Date(existingReward.expiresAt).toLocaleDateString('tr-TR', { 
-                    day: 'numeric', 
-                    month: 'long', 
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })} tarihine kadar geçerlidir.
+                  {"Bugün 23:59'a kadar geçerlidir."}
                 </span>
               </div>
             )}
@@ -552,13 +546,7 @@ export default function JackpotPage() {
                 <p>
                   <span className="font-medium text-yellow-200">Son kullanma:</span>{' '}
                   <span className="font-bold">
-                    {new Date(reward.expiresAt).toLocaleDateString('tr-TR', { 
-                      day: 'numeric', 
-                      month: 'long', 
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {"Bugün 23:59'a kadar geçerlidir."}
                   </span>
                 </p>
               </div>
