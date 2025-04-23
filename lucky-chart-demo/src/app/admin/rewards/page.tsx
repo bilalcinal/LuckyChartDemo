@@ -21,6 +21,8 @@ export default function AdminRewards() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updatingRewardId, setUpdatingRewardId] = useState<string | null>(null);
+  const [searchCode, setSearchCode] = useState('');
+  const [filteredRewards, setFilteredRewards] = useState<Reward[]>([]);
   
   // Session kontrolü
   useEffect(() => {
@@ -50,6 +52,7 @@ export default function AdminRewards() {
         
         const data = await response.json();
         setRewards(data);
+        setFilteredRewards(data); // Tüm ödülleri filtrelenmiş duruma da kaydet
       } catch (error) {
         console.error('Ödülleri getirme hatası:', error);
         setError('Ödüller yüklenirken bir hata oluştu');
@@ -62,6 +65,32 @@ export default function AdminRewards() {
       fetchRewards();
     }
   }, [status, session]);
+  
+  // Ödül kodu ile anlık arama yap
+  const handleSearch = (searchValue: string) => {
+    setSearchCode(searchValue);
+    
+    if (!searchValue.trim()) {
+      setFilteredRewards(rewards); // Arama kutusu boş ise tüm ödülleri göster
+      return;
+    }
+    
+    // Arama yaparken büyük/küçük harf duyarlılığını kaldır
+    const searchTerm = searchValue.trim().toUpperCase();
+    const filtered = rewards.filter(reward => 
+      reward.code.toUpperCase().includes(searchTerm) ||
+      reward.itemTitle.toUpperCase().includes(searchTerm) ||
+      reward.userPhone.toUpperCase().includes(searchTerm)
+    );
+    
+    setFilteredRewards(filtered);
+  };
+
+  // Arama sıfırla
+  const resetSearch = () => {
+    setSearchCode('');
+    setFilteredRewards(rewards);
+  };
   
   // Ödülü kullanıldı olarak işaretle
   const markRewardAsUsed = async (rewardId: string, isUsed: boolean) => {
@@ -158,9 +187,43 @@ export default function AdminRewards() {
           </div>
         )}
         
+        {/* Arama/Filtreleme Bölümü */}
+        <div className="mb-6 bg-gray-900 p-4 rounded-lg border border-gray-800">
+          <h2 className="text-lg font-bold text-yellow-400 mb-3">Ödül Ara</h2>
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex-1">
+              <input
+                type="text"
+                value={searchCode}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Kod, ödül adı veya telefon numarası ile ara..."
+                className="w-full bg-gray-800 text-white border border-gray-700 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              />
+            </div>
+            {searchCode && (
+              <button
+                onClick={resetSearch}
+                className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-md"
+              >
+                Temizle
+              </button>
+            )}
+          </div>
+          {filteredRewards.length === 0 && searchCode && (
+            <div className="mt-4 text-yellow-500">
+              &quot;{searchCode}&quot; aramasına uygun sonuç bulunamadı.
+            </div>
+          )}
+          {searchCode && filteredRewards.length > 0 && (
+            <div className="mt-2 text-gray-400 text-sm">
+              {filteredRewards.length} sonuç bulundu
+            </div>
+          )}
+        </div>
+        
         <div className="bg-gray-900 shadow border border-gray-800 overflow-hidden rounded-lg">
           <div className="px-6 py-4 border-b border-gray-800">
-            <h2 className="text-xl font-bold">Ödül Listesi</h2>
+            <h2 className="text-xl font-bold">Ödül Listesi {searchCode && <span className="text-sm font-normal text-gray-400">({filteredRewards.length}/{rewards.length})</span>}</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-800">
@@ -187,8 +250,8 @@ export default function AdminRewards() {
                 </tr>
               </thead>
               <tbody className="bg-gray-900 divide-y divide-gray-800">
-                {rewards.length > 0 ? (
-                  rewards.map((reward) => (
+                {filteredRewards.length > 0 ? (
+                  filteredRewards.map((reward) => (
                     <tr key={reward.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-yellow-400">{reward.code}</div>
@@ -241,7 +304,9 @@ export default function AdminRewards() {
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-400">
-                      Henüz ödül bulunmuyor.
+                      {searchCode 
+                        ? `"${searchCode}" araması için sonuç bulunamadı.` 
+                        : "Henüz ödül bulunmuyor."}
                     </td>
                   </tr>
                 )}
