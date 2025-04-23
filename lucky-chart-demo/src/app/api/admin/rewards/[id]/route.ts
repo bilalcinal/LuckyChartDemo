@@ -10,17 +10,18 @@ const prisma = new PrismaClient();
 // Belirli bir ödülü getirme
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
+    // Önce params değerlerini alalım
+    const id = context.params.id;
+    
     // Oturum kontrolü
     const session = await getServerSession(authOptions);
     
     if (!session || !session.user || (session.user.role !== 'ADMIN' && session.user.role !== 'EMPLOYEE')) {
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
-
-    const id = params.id;
 
     const reward = await prisma.reward.findUnique({
       where: { id },
@@ -48,9 +49,12 @@ export async function GET(
 // Ödülü güncelleme (kullanıldı olarak işaretleme vb.)
 export async function PUT(
   request: NextRequest, 
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
+    // Önce params değerlerini alalım
+    const id = context.params.id;
+    
     // Oturum kontrolü
     const session = await getServerSession(authOptions);
     
@@ -58,7 +62,6 @@ export async function PUT(
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
-    const id = params.id;
     const data = await request.json();
 
     // Ödülün varlığını kontrol et
@@ -96,17 +99,18 @@ export async function PUT(
 // Ödülü silme
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
+    // Önce params değerlerini alalım
+    const id = context.params.id;
+    
     // Oturum kontrolü
     const session = await getServerSession(authOptions);
     
     if (!session || !session.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
-
-    const id = params.id;
 
     // Ödülün varlığını kontrol et
     const existingReward = await prisma.reward.findUnique({
@@ -132,9 +136,12 @@ export async function DELETE(
 // PATCH metodu ekleyelim (PUT ile aynı işlevselliğe sahip)
 export async function PATCH(
   request: NextRequest, 
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
+    // Önce params değerlerini alalım
+    const id = context.params.id;
+    
     // Oturum kontrolü
     const session = await getServerSession(authOptions);
     
@@ -142,7 +149,6 @@ export async function PATCH(
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
-    const id = params.id;
     const data = await request.json();
 
     // Ödülün varlığını kontrol et

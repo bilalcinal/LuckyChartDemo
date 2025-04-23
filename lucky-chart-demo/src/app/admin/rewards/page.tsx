@@ -109,14 +109,25 @@ export default function AdminRewards() {
         throw new Error('Ödül güncellenemedi');
       }
       
-      // UI'da güncellenemiyorsa, bu kodu kullanın
-      setRewards(prev => 
-        prev.map(reward => 
-          reward.id === rewardId 
-            ? { ...reward, isUsed } 
-            : reward
-        )
+      // Başarılı bir şekilde güncellendiğinde yeni bir sunucu isteği yapmak yerine
+      // yerel state'i güncelleyelim
+      
+      // Ana ödül listesini güncelle
+      const updatedRewards = rewards.map(reward => 
+        reward.id === rewardId 
+          ? { ...reward, isUsed } 
+          : reward
       );
+      setRewards(updatedRewards);
+      
+      // Filtrelenmiş ödül listesini de güncelle
+      const updatedFilteredRewards = filteredRewards.map(reward => 
+        reward.id === rewardId 
+          ? { ...reward, isUsed } 
+          : reward
+      );
+      setFilteredRewards(updatedFilteredRewards);
+      
     } catch (error) {
       console.error('Ödül işaretleme hatası:', error);
       setError('Ödül güncellenirken bir hata oluştu');
