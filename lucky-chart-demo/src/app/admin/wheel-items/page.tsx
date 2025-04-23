@@ -28,7 +28,8 @@ export default function AdminWheelItems() {
     title: '',
     description: '',
     color: '#ff8f43', // Varsayılan renk
-    probability: 1.0,
+    probability: 0.01,
+    displayProbability: '1', // Görüntüleme için
     isActive: true,
   });
   const [showForm, setShowForm] = useState(false);
@@ -94,12 +95,19 @@ export default function AdminWheelItems() {
       const { checked } = e.target as HTMLInputElement;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else if (name === 'probability') {
-      // Olasılık değerini yüzdelik değerden ondalık değere dönüştür (örn: 5 -> 0.05)
-      const numValue = parseFloat(value);
-      if (!isNaN(numValue)) {
-        // 0 ile 100 arasında sınırla
-        const clampedValue = Math.min(100, Math.max(0.01, numValue));
-        setFormData(prev => ({ ...prev, [name]: clampedValue / 100 }));
+      // Olasılık değerini kontrol et - sadece sayılar ve nokta karakteri
+      if (value === '' || /^(\d+)?\.?(\d{0,2})?$/.test(value)) {
+        const numValue = value === '' ? 0 : parseFloat(value);
+        
+        // 100'den büyük değerleri sınırla
+        const limitedValue = Math.min(100, numValue);
+        
+        // Form içinde gösterim için normal değer, state'de ondalık olarak
+        setFormData(prev => ({ 
+          ...prev, 
+          [name]: limitedValue / 100,
+          displayProbability: limitedValue.toString() // Görüntüleme için düz değer
+        }));
       }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -112,6 +120,7 @@ export default function AdminWheelItems() {
       description: '',
       color: '#ff8f43',
       probability: 0.01, // %1 olarak başlatalım
+      displayProbability: '1', // Görüntüleme için
       isActive: true,
     });
     setEditingId(null);
@@ -122,8 +131,9 @@ export default function AdminWheelItems() {
       title: item.title,
       description: item.description || '',
       color: item.color,
-      // Ondalık olasılık değerini yüzdelik gösterim için çarp (örn: 0.05 -> 5)
-      probability: item.probability * 100,
+      // Sadece gerçek yüzdelik değer olarak göster
+      probability: item.probability,
+      displayProbability: (item.probability * 100).toString(),
       isActive: item.isActive,
     });
     setEditingId(item.id);
@@ -464,21 +474,19 @@ export default function AdminWheelItems() {
                       </label>
                       <div className="mt-1 flex items-center">
                         <input
-                          type="number"
+                          type="text"
                           name="probability"
                           id="probability"
-                          min="0.01"
-                          max="100"
-                          step="0.01"
                           required
-                          value={formData.probability * 100}
+                          value={formData.displayProbability}
                           onChange={handleInputChange}
                           className="block w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                          placeholder="Örn: 10.25"
                         />
                         <span className="ml-3 text-gray-300">%</span>
                       </div>
                       <p className="mt-1 text-sm text-gray-400">
-                        Ödülün çarkta çıkma olasılığı. Örnek: %5 = 0.05 (toplam yüzdelik %100 = 1.0)
+                        Ödülün çarkta çıkma olasılığı. 0.01 ile 100 arasında ondalık değer girebilirsiniz.
                       </p>
                     </div>
                     
