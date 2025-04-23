@@ -45,6 +45,27 @@ function QRContent() {
     setVerificationCode(combinedCode);
   }, [codeDigits]);
   
+  // Kopyala-yapıştır için kod yönetimi
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData?.getData('text') || '';
+    // Sadece sayıları almak için filtreleme
+    const numericText = pastedText.replace(/\D/g, '').slice(0, 6);
+    
+    if (numericText) {
+      // Her karakter için ayrı input'a yerleştir
+      const newDigits = [...codeDigits];
+      for (let i = 0; i < Math.min(numericText.length, 6); i++) {
+        newDigits[i] = numericText[i];
+      }
+      setCodeDigits(newDigits);
+      
+      // Son karakterden sonraki input'a odaklan veya tamamlandıysa son input'a
+      const focusIndex = Math.min(numericText.length, 5);
+      document.getElementById(`code-${focusIndex}`)?.focus();
+    }
+  };
+  
   const handleCodeChange = (index: number, value: string) => {
     // Sadece rakam girişine izin ver
     if (value && !/^\d*$/.test(value)) return;
@@ -79,6 +100,17 @@ function QRContent() {
         return;
       }
 
+      // Telefon numarası format kontrolü (Türkiye formatı)
+      const phonePattern = /^(5\d{9})$|^(05\d{9})$|^(\+905\d{9})$/;
+      const cleanPhone = phone.replace(/\D/g, '');
+      
+      // Telefon numarası başında 0 veya ülke kodu yoksa 5 ile başlayan 10 haneli olmalı
+      if (!phonePattern.test(phone) && !(cleanPhone.length === 10 && cleanPhone.startsWith('5'))) {
+        setError('Lütfen geçerli bir Türkiye telefon numarası girin (5xx xxx xx xx)');
+        setIsLoading(false);
+        return;
+      }
+
       // Email kontrolü
       if (!email) {
         setError('Lütfen e-posta adresinizi girin');
@@ -95,7 +127,7 @@ function QRContent() {
       }
 
       // Telefon numarası formatlama
-      const formattedPhone = phone.startsWith('+90') ? phone : `+90${phone.replace(/\D/g, '')}`;
+      const formattedPhone = phone.startsWith('+90') ? phone : `+90${cleanPhone.startsWith('0') ? cleanPhone.substring(1) : cleanPhone}`;
 
       // Kayıt API'sini çağır
       const registerResponse = await fetch('/api/register', {
@@ -290,9 +322,19 @@ function QRContent() {
                         placeholder="5XX XXX XX XX"
                         className="relative z-10 shadow appearance-none border border-gray-700 bg-gray-800/70 backdrop-blur-sm rounded-lg w-full py-3 px-4 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent transition-all duration-300"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => {
+                          // Sadece sayıları ve başında + işaretini kabul et
+                          const value = e.target.value;
+                          if (/^(\+)?[0-9]*$/.test(value)) {
+                            // Maksimum karakter kontrolü (başında + varsa 13, yoksa 11 karakter)
+                            if ((value.startsWith('+') && value.length <= 13) || (!value.startsWith('+') && value.length <= 11)) {
+                              setPhone(value);
+                            }
+                          }
+                        }}
                         onFocus={() => setActiveInput('phone')}
                         onBlur={() => setActiveInput('')}
+                        maxLength={13}
                         required
                       />
                     </div>
@@ -386,12 +428,15 @@ function QRContent() {
                           <input
                             key={i}
                             id={`code-${i}`}
-                            type="text"
+                            type="number"
+                            min="0"
+                            max="9" 
                             maxLength={1}
                             value={codeDigits[i]}
                             onChange={(e) => handleCodeChange(i, e.target.value)}
                             onKeyDown={(e) => handleCodeKeyDown(i, e)}
-                            className="relative z-10 w-10 h-14 sm:w-12 sm:h-16 text-center text-xl font-bold bg-gray-800/70 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent text-white transition-all duration-300"
+                            onPaste={i === 0 ? handlePaste : undefined}
+                            className="relative z-10 w-10 h-14 sm:w-12 sm:h-16 text-center text-xl font-bold bg-gray-800/70 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent text-white transition-all duration-300 [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         ))}
                       </div>
