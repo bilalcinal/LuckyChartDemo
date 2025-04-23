@@ -7,7 +7,7 @@ const SEND_SMS_ENDPOINT = 'https://api.netgsm.com.tr/sms/send/get';
 const NETGSM_USER = 'xxxx';
 const NETGSM_PASSWORD = 'xxxxxx';
 const SENDER_ID = 'xxx';
-const REMINDER_MESSAGE = 'Bugün şansınızı denemek için çark çevirmeyi unutmayın! Kafeye uğrayın ve size özel indirimler kazanın. ŞanslıÇark';
+const REMINDER_MESSAGE = 'Bugün şansınızı denemek için çark çevirmeyi unutmayın! Kafeye uğrayın ve size özel indirimler kazanın. MackPot';
 
 export async function GET() {
   try {

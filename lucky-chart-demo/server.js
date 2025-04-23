@@ -2,7 +2,7 @@
 const { startAllSchedulers } = require('./src/lib/scheduler-cjs');
 
 // Zamanlayıcı servisi başlatılıyor
-console.log('ŞanslıÇark Zamanlayıcı Servisi başlatılıyor...');
+console.log('MackPot Zamanlayıcı Servisi başlatılıyor...');
 
 // Burada tüm zamanlanmış işleri başlatıyoruz
 try {
@@ -18,5 +18,5 @@ const cron = require('node-cron');
 const axios = require('axios');
 
 // Start the scheduling tasks
-console.log('ŞanslıÇark Zamanlayıcı Servisi başlatıldı!');
+console.log('MackPot Zamanlayıcı Servisi başlatıldı!');
 console.log('Durdurmak için CTRL+C tuşlarına basın.'); 

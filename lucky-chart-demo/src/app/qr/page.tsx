@@ -281,7 +281,7 @@ function QRContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-center mb-1 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">ŞanslıÇark</h1>
+                <h1 className="text-3xl sm:text-4xl font-bold text-center mb-1 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">MackPot</h1>
                 <h2 className="text-lg sm:text-xl text-center text-gray-300 font-light">Akyazı Macbear</h2>
               </div>
               

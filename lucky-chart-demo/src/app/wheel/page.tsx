@@ -273,7 +273,7 @@ export default function JackpotPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black py-10">
       <div className="text-center mb-8 w-full max-w-3xl px-4">
-        <h1 className="text-5xl font-bold text-yellow-400 mb-2 filter drop-shadow-lg">ŞanslıÇark</h1>
+        <h1 className="text-5xl font-bold text-yellow-400 mb-2 filter drop-shadow-lg">MackPot</h1>
         <p className="text-gray-300 text-lg">
           Hoş geldin, <span className="font-semibold text-yellow-200">{session?.user?.phone}</span>!
           Kolu çekerek şansını dene.

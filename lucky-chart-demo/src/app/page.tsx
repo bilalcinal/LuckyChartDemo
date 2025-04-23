@@ -25,7 +25,7 @@ export default function Home() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center">
         <div className="backdrop-blur-sm bg-black/50 p-8 rounded-xl shadow-xl border border-gray-800">
-          <h1 className="text-3xl font-bold mb-4">ŞanslıÇark</h1>
+          <h1 className="text-3xl font-bold mb-4">MackPot</h1>
           <p className="mb-6">Akyazı Macbear'ın özel promosyon uygulamasına hoş geldiniz!</p>
           <Link 
             href="/qr" 

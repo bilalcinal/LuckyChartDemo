@@ -31,21 +31,21 @@ async function sendVerificationEmail(email: string, verificationCode: string) {
 
   // Email içeriği
   const mailOptions = {
-    from: '"ŞanslıÇark" <macbearakyazi@gmail.com>',
+    from: '"MackPot" <macbearakyazi@gmail.com>',
     to: email,
-    subject: 'ŞanslıÇark - Hesap Doğrulama Kodu',
+    subject: 'MackPot - Hesap Doğrulama Kodu',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 5px;">
-        <h2 style="color: #f59e0b; text-align: center;">ŞanslıÇark - Akyazı Macbear</h2>
+        <h2 style="color: #f59e0b; text-align: center;">MackPot - Akyazı Macbear</h2>
         <p style="text-align: center;">Akyazı Macbear'ın özel promosyon uygulamasına hoş geldiniz!</p>
-        <p>Hesabınızı doğrulamak için aşağıdaki 6 haneli kodu kullanın:</p>
+        <p>Hesabınızı doğrulamak için aşağıdaki 6 haneli kodu kullanın: ${verificationCode}</p>
         
         <div style="background-color: #f0f0f0; padding: 15px; text-align: center; margin: 20px 0; border-radius: 5px;">
           <h3 style="font-size: 24px; color: #333; letter-spacing: 2px; margin: 0;">${verificationCode}</h3>
         </div>
         
         <p>Bu kod 24 saat boyunca geçerlidir.</p>
-        <p style="color: #666; font-size: 12px; text-align: center;">Bu e-posta, ŞanslıÇark uygulamasına kayıt olduğunuz için gönderilmiştir.</p>
+        <p style="color: #666; font-size: 12px; text-align: center;">Bu e-posta, MackPot uygulamasına kayıt olduğunuz için gönderilmiştir.</p>
       </div>
     `
   };
