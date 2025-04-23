@@ -127,4 +127,52 @@ export async function DELETE(
     console.error('Ödül silme hatası:', error);
     return NextResponse.json({ error: 'Ödül silinirken bir hata oluştu' }, { status: 500 });
   }
+}
+
+// PATCH metodu ekleyelim (PUT ile aynı işlevselliğe sahip)
+export async function PATCH(
+  request: NextRequest, 
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Oturum kontrolü
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !session.user || (session.user.role !== 'ADMIN' && session.user.role !== 'EMPLOYEE')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+    }
+
+    const id = params.id;
+    const data = await request.json();
+
+    // Ödülün varlığını kontrol et
+    const existingReward = await prisma.reward.findUnique({
+      where: { id }
+    });
+
+    if (!existingReward) {
+      return NextResponse.json({ error: 'Ödül bulunamadı' }, { status: 404 });
+    }
+
+    // Çalışan rolü sadece kullanıldı durumunu değiştirebilir
+    if (session.user.role === 'EMPLOYEE') {
+      // Sadece isUsed alanını güncellemeye izin ver
+      const updatedReward = await prisma.reward.update({
+        where: { id },
+        data: { isUsed: data.isUsed }
+      });
+      return NextResponse.json(updatedReward);
+    }
+
+    // Admin rolü için tam erişim
+    const updatedReward = await prisma.reward.update({
+      where: { id },
+      data
+    });
+
+    return NextResponse.json(updatedReward);
+  } catch (error) {
+    console.error('Ödül güncelleme hatası:', error);
+    return NextResponse.json({ error: 'Ödül güncellenirken bir hata oluştu' }, { status: 500 });
+  }
 } 

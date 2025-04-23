@@ -66,7 +66,7 @@ export default function AdminRewards() {
   const markRewardAsUsed = async (rewardId: string, isUsed: boolean) => {
     try {
       const response = await fetch(`/api/admin/rewards/${rewardId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
