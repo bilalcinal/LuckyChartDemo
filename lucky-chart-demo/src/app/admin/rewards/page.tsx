@@ -20,6 +20,7 @@ export default function AdminRewards() {
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [updatingRewardId, setUpdatingRewardId] = useState<string | null>(null);
   
   // Session kontrolü
   useEffect(() => {
@@ -65,6 +66,8 @@ export default function AdminRewards() {
   // Ödülü kullanıldı olarak işaretle
   const markRewardAsUsed = async (rewardId: string, isUsed: boolean) => {
     try {
+      setUpdatingRewardId(rewardId);
+      
       const response = await fetch(`/api/admin/rewards/${rewardId}`, {
         method: 'PUT',
         headers: {
@@ -88,6 +91,9 @@ export default function AdminRewards() {
     } catch (error) {
       console.error('Ödül işaretleme hatası:', error);
       setError('Ödül güncellenirken bir hata oluştu');
+    } finally {
+      // İşlem tamamlandıktan sonra loading durumunu kaldır
+      setUpdatingRewardId(null);
     }
   };
   
@@ -206,7 +212,15 @@ export default function AdminRewards() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        {!reward.isUsed ? (
+                        {updatingRewardId === reward.id ? (
+                          <div className="flex items-center justify-end space-x-2">
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="text-gray-300">İşleniyor...</span>
+                          </div>
+                        ) : !reward.isUsed ? (
                           <button
                             onClick={() => markRewardAsUsed(reward.id, true)}
                             className="text-green-500 hover:text-green-400"
