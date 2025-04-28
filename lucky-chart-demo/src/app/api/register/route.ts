@@ -20,9 +20,11 @@ interface UserType {
 
 // Doğrulama kodu gönderme işlevi
 async function sendVerificationEmail(email: string, verificationCode: string) {
-  // SMTP yapılandırması
+  // SMTP yapılandırması - TLS/SSL ile güvenli bağlantı
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465, // SSL için 465
+    secure: true, // SSL kullanımını aktif et
     auth: {
       user: 'macbearakyazi@gmail.com',
       pass: 'tqwn mwgq dgmb qgyo'
