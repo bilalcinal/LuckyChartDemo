@@ -81,10 +81,22 @@ export async function POST(req: NextRequest) {
 
     // Email format kontrolü
     if (email) {
+      // Temel email format kontrolü
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         return NextResponse.json(
           { error: 'Geçerli bir e-posta adresi giriniz' },
+          { status: 400 }
+        );
+      }
+      
+      // İzin verilen mail uzantıları kontrolü
+      const allowedDomains = ['gmail.com', 'icloud.com', 'outlook.com'];
+      const emailDomain = email.split('@')[1].toLowerCase();
+      
+      if (!allowedDomains.includes(emailDomain)) {
+        return NextResponse.json(
+          { error: 'Sadece Gmail, iCloud veya Outlook mail adresleri kabul edilmektedir' },
           { status: 400 }
         );
       }
