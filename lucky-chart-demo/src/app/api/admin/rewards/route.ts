@@ -27,7 +27,8 @@ export async function GET(request: Request) {
         },
         user: {
           select: {
-            phone: true
+            phone: true,
+            email: true
           }
         }
       }
@@ -39,6 +40,7 @@ export async function GET(request: Request) {
       code: reward.code,
       itemTitle: reward.wheelItem?.title || 'Bilinmeyen Ödül',
       userPhone: reward.user?.phone || 'Bilinmeyen Kullanıcı',
+      userEmail: reward.user?.email || '-',
       createdAt: reward.createdAt.toISOString(),
       isUsed: reward.isUsed
     }));

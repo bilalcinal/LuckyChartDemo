@@ -10,6 +10,7 @@ type Reward = {
   code: string;
   itemTitle: string;
   userPhone: string;
+  userEmail: string;
   createdAt: string;
   isUsed: boolean;
 };
@@ -69,7 +70,9 @@ export default function EmployeeRewardsPage() {
     // Arama yaparken büyük/küçük harf duyarlılığını kaldır
     const searchTerm = searchCode.trim().toUpperCase();
     const filtered = rewards.filter(reward => 
-      reward.code.toUpperCase().includes(searchTerm)
+      reward.code.toUpperCase().includes(searchTerm) ||
+      reward.userPhone.toUpperCase().includes(searchTerm) ||
+      (reward.userEmail && reward.userEmail.toUpperCase().includes(searchTerm))
     );
     
     setFilteredRewards(filtered);
@@ -191,7 +194,7 @@ export default function EmployeeRewardsPage() {
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ödül kodu girin..."
+                placeholder="Ödül kodu, telefon veya e-posta ile arayın..."
                 className="w-full bg-gray-800 text-white border border-gray-700 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               />
             </div>
@@ -228,23 +231,26 @@ export default function EmployeeRewardsPage() {
             <table className="min-w-full bg-gray-900 rounded-lg overflow-hidden">
               <thead className="bg-gray-800">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Kod
+                  <th className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-lg font-bold text-yellow-400">Kod</div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Ödül
+                  <th className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-300">Ödül</div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Kullanıcı
+                  <th className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-300">Telefon</div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Tarih
+                  <th className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-300">E-posta</div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Durum
+                  <th className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-300">Tarih</div>
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    İşlem
+                  <th className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-300">Durum</div>
+                  </th>
+                  <th className="px-6 py-4 whitespace-nowrap text-right">
+                    <div className="text-sm text-gray-300">İşlem</div>
                   </th>
                 </tr>
               </thead>
@@ -261,15 +267,16 @@ export default function EmployeeRewardsPage() {
                       <div className="text-sm text-gray-300">{reward.userPhone}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-300">
-                        {new Date(reward.createdAt).toLocaleDateString('tr-TR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </div>
+                      <div className="text-sm text-gray-300">{reward.userEmail}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-300">{new Date(reward.createdAt).toLocaleDateString('tr-TR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span

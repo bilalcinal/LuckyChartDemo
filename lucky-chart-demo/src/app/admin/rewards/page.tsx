@@ -10,6 +10,7 @@ type Reward = {
   code: string;
   itemTitle: string;
   userPhone: string;
+  userEmail: string;
   createdAt: string;
   isUsed: boolean;
 };
@@ -80,7 +81,8 @@ export default function AdminRewards() {
     const filtered = rewards.filter(reward => 
       reward.code.toUpperCase().includes(searchTerm) ||
       reward.itemTitle.toUpperCase().includes(searchTerm) ||
-      reward.userPhone.toUpperCase().includes(searchTerm)
+      reward.userPhone.toUpperCase().includes(searchTerm) ||
+      (reward.userEmail && reward.userEmail.toUpperCase().includes(searchTerm))
     );
     
     setFilteredRewards(filtered);
@@ -207,7 +209,7 @@ export default function AdminRewards() {
                 type="text"
                 value={searchCode}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Kod, ödül adı veya telefon numarası ile ara..."
+                placeholder="Kod, ödül adı, telefon veya e-posta ile ara..."
                 className="w-full bg-gray-800 text-white border border-gray-700 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               />
             </div>
@@ -247,7 +249,10 @@ export default function AdminRewards() {
                     Ödül
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Kullanıcı
+                    Telefon
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    E-posta
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Tarih
@@ -272,6 +277,9 @@ export default function AdminRewards() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-300">{reward.userPhone}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-300">{reward.userEmail}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-300">{formatDate(reward.createdAt)}</div>
@@ -314,7 +322,7 @@ export default function AdminRewards() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-400">
+                    <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-400">
                       {searchCode 
                         ? `"${searchCode}" araması için sonuç bulunamadı.` 
                         : "Henüz ödül bulunmuyor."}
